@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "outDir": "dist",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "composite": true
+  },
+  "include": [
+    "packages/*/src/**/*.{ts,tsx,js,jsx,mjs}",
+    "common/*/src/**/*.{ts,tsx,js,jsx,mjs}",
+    "site/**/*.{ts,tsx,js,jsx,mjs}",
+    "config/**/*.{ts,tsx,js,jsx,mjs}",
+    "scripts/**/*.{ts,tsx,js,jsx,mjs}",
+    "__tests__",
+    "eslint.config.mjs",
+    "prettier.config.mjs",
+    "commitlint.config.mjs",
+    "src/**/*.{ts,tsx,js,jsx,mjs}",
+    "src/*.{ts,tsx,js,jsx,mjs}"
+  ],
+  "exclude": ["node_modules"]
+}
