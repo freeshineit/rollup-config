@@ -30,8 +30,10 @@ pnpm add -D sass
 在项目根目录创建 `rollup.config.mjs`:
 
 ```js
-import pkg from "./package.json" with { type: "json" };
 import generateConfig from "@skax/rollup-config";
+import fs from "fs";
+
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
 export default generateConfig(pkg);
 ```
