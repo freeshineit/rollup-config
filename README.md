@@ -11,10 +11,10 @@
 npm install rollup @skax/rollup-config -D
 
 # yarn
-yarn add -D rollup @skax/rollup-config
+yarn add rollup @skax/rollup-config -D
 
 # pnpm
-pnpm add -D rollup @skax/rollup-config
+pnpm add rollup @skax/rollup-config -D
 ```
 
 如果你的项目使用了本配置内置的样式链路，通常还需要安装以下依赖：
