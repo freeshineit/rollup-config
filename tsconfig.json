@@ -24,18 +24,6 @@
     "incremental": true,
     "composite": true
   },
-  "include": [
-    "packages/*/src/**/*.{ts,tsx,js,jsx,mjs}",
-    "common/*/src/**/*.{ts,tsx,js,jsx,mjs}",
-    "site/**/*.{ts,tsx,js,jsx,mjs}",
-    "config/**/*.{ts,tsx,js,jsx,mjs}",
-    "scripts/**/*.{ts,tsx,js,jsx,mjs}",
-    "__tests__",
-    "eslint.config.mjs",
-    "prettier.config.mjs",
-    "commitlint.config.mjs",
-    "src/**/*.{ts,tsx,js,jsx,mjs}",
-    "src/*.{ts,tsx,js,jsx,mjs}"
-  ],
+  "include": ["src/**/*.{ts,tsx,js,cjs,jsx,mjs}", "eslint.config.mjs", "prettier.config.mjs", "commitlint.config.mjs", "src/*.{ts,tsx,js,cjs,jsx,mjs}"],
   "exclude": ["node_modules"]
 }
