@@ -14,10 +14,8 @@ import postcss from "rollup-plugin-postcss";
 import cssnano from "cssnano";
 import autoprefixer from "autoprefixer";
 import fs from "fs";
+import { resolve as pathResolve } from "path";
 import { injectCssRequire } from "./injectCssRequire.mjs";
-
-const isProduction = process.env.NODE_ENV === "production";
-const isReact = process.env.REACT_ENV === "react";
 
 /**
  * @description rollup config function
@@ -33,6 +31,9 @@ const isReact = process.env.REACT_ENV === "react";
  * @returns
  */
 function generateConfig(pkg, configs) {
+  const isProduction = process.env.NODE_ENV === "production";
+  const isReact = process.env.REACT_ENV === "react";
+
   // prettier-ignore
   const banner = `/*
 * ${pkg.name} v${pkg.version}
@@ -131,7 +132,7 @@ function generateConfig(pkg, configs) {
           entries: [
             {
               find: /^@\/(.*)/,
-              replacement: resolve(process.cwd(), "src/$1"),
+              replacement: pathResolve(process.cwd(), "src/$1"),
             },
           ],
         }),
@@ -237,7 +238,7 @@ function generateConfig(pkg, configs) {
           entries: [
             {
               find: /^@\/(.*)/,
-              replacement: resolve(process.cwd(), "src/$1"),
+              replacement: pathResolve(process.cwd(), "src/$1"),
             },
           ],
         }),

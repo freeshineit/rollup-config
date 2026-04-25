@@ -13,6 +13,7 @@
     }
   },
   "scripts": {
+    "test": "node --test",
     "lint": "eslint --fix \"./src/**/*.{ts,tsx,js,jsx,mjs,vue,cjs}\"",
     "lint:check": "eslint \"./src/**/*.{ts,tsx,js,jsx,mjs,vue,cjs}\"",
     "fmt": "prettier --write \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs}\"",
