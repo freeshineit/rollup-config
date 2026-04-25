@@ -120,8 +120,10 @@ src/
 `generateConfig` 的第二个参数支持追加额外的 Rollup 配置：
 
 ```js
-import pkg from "./package.json" with { type: "json" };
 import generateConfig from "@skax/rollup-config";
+import fs from "fs";
+
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
 export default generateConfig(pkg, [
   {
