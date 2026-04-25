@@ -1,9 +1,9 @@
 {
   "name": "@skax/rollup-config",
-  "version": "0.1.0",
-  "main": "src/index.mjs",
-  "types": "src/index.mjs",
-  "module": "src/index.mjs",
+  "version": "0.1.0-beta.1",
+  "main": "./src/index.mjs",
+  "types": "./src/index.mjs",
+  "module": "./src/index.mjs",
   "exports": {
     ".": {
       "types": "./src/index.mjs",
@@ -24,6 +24,9 @@
     "rollup-plugin",
     "rollup-config",
     "build-tool"
+  ],
+  "files": [
+    "src"
   ],
   "author": "ShineShao <xiaoshaoqq@gmail.com>",
   "license": "MIT",
