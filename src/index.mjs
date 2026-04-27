@@ -9,6 +9,7 @@ import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
 import alias from "@rollup/plugin-alias";
 import copy from "rollup-plugin-copy";
+import terser from "@rollup/plugin-terser";
 import dayjs from "dayjs";
 import postcss from "rollup-plugin-postcss";
 import cssnano from "cssnano";
@@ -116,6 +117,24 @@ function generateConfig(pkg, configs) {
       : null,
   ].filter(Boolean);
 
+  const terserPlugin = terser({
+    compress: {
+      defaults: true,
+      drop_console: true, // 去除 console.log
+    }, // 禁用所有压缩功能
+    mangle: false, // 不混淆任何变量名（包括函数名） 混淆后可能会导致变量同名而被覆盖
+    format: {
+      beautify: false, // 保持代码格式
+      // comments: true, // 保留注释
+      comments: function (node, comment) {
+        if (comment.type === "comment2") {
+          // multiline comment
+          return comment.value.includes("Copyright (c) "); // 不可以使用变量
+        }
+      },
+    },
+  });
+
   return [
     ...defaultConfigs.map((entry) => ({
       ...entry,
@@ -149,7 +168,6 @@ function generateConfig(pkg, configs) {
               },
               include: ["./src/**/*.{ts,js,cjs,mjs,tsx,jsx}"],
             }),
-
         resolve({
           // extensions: ['.js', '.cjs', '.jsx', '.mjs', '.ts', '.tsx', '.json'],
         }),
@@ -227,6 +245,7 @@ function generateConfig(pkg, configs) {
         }),
         // css.ts. => css.js 注入内容（require("./css.css");）
         entry.input === cssInput ? injectCssRequire() : null,
+        isProduction ? terserPlugin : null,
         ...[entry?.plugins || []],
       ].filter(Boolean),
     })),

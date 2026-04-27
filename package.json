@@ -18,7 +18,7 @@
     "lint:check": "eslint \"./src/**/*.{ts,tsx,js,jsx,mjs,vue,cjs}\"",
     "fmt": "prettier --write \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs}\"",
     "fmt:check": "prettier --check \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs}\"",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "keywords": [
     "rollup",
@@ -49,6 +49,7 @@
     "@rollup/plugin-swc": "^0.4.0",
     "@rollup/plugin-typescript": "^11.1.6",
     "@rollup/plugin-alias": "^6.0.0",
+    "@rollup/plugin-terser": "^1.0.0",
     "rollup-plugin-copy": "^3.5.0",
     "@skax/camel": "^0.2.6",
     "@swc/core": "^1.15.7",
