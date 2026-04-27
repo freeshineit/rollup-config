@@ -121,6 +121,7 @@ function generateConfig(pkg, configs) {
     compress: {
       defaults: true,
       drop_console: true, // 去除 console.log
+      drop_debugger: true, // 去除 debugger
     }, // 禁用所有压缩功能
     mangle: false, // 不混淆任何变量名（包括函数名） 混淆后可能会导致变量同名而被覆盖
     format: {
