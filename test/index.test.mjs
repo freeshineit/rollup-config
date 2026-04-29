@@ -127,3 +127,59 @@ test("generateConfig skips UMD and style builds in production when source files 
     false,
   );
 });
+
+test("generateConfig supports custom input, output, exportName and formats", { concurrency: false }, async () => {
+  const configs = await withGenerateConfig(
+    {
+      nodeEnv: "development",
+      reactEnv: "react",
+      existingPaths: ["src/custom-style.ts"],
+    },
+    async (generateConfig) =>
+      generateConfig(
+        {
+          name: "@scope/custom-lib",
+          version: "2.0.0",
+          author: "Test Author",
+          dependencies: {
+            lodash: "^1.0.0",
+          },
+        },
+        [],
+        {
+          input: "src/custom-entry.ts",
+          cssInput: "src/custom-style.ts",
+          exportName: "CustomGlobal",
+          formats: ["cjs"],
+          output: {
+            cjs: "build/custom.cjs",
+            types: "build/types.d.ts",
+            style: "build/style.cjs",
+          },
+        },
+      ),
+  );
+
+  assert.equal(configs.length, 3);
+
+  const cjsConfig = getConfigByOutput(configs, "build/custom.cjs");
+  const esmConfig = getConfigByOutput(configs, "dist/index.mjs");
+  const umdConfig = getConfigByOutput(configs, "dist/index.umd.js");
+  const styleConfig = getConfigByOutput(configs, "build/style.cjs");
+  const dtsConfig = getConfigByOutput(configs, "build/types.d.ts");
+
+  assert.ok(cjsConfig);
+  assert.equal(cjsConfig.input, "src/custom-entry.ts");
+  assert.equal(cjsConfig.output[0].format, "cjs");
+  assert.equal(esmConfig, undefined);
+  assert.equal(umdConfig, undefined);
+
+  assert.ok(styleConfig);
+  assert.equal(styleConfig.input, "src/custom-style.ts");
+
+  assert.ok(dtsConfig);
+  assert.equal(dtsConfig.input, "src/custom-entry.ts");
+
+  // formats excludes umd, so custom exportName should not leak into non-umd outputs.
+  assert.equal(cjsConfig.output[0].name, undefined);
+});

@@ -137,6 +137,37 @@ export default generateConfig(pkg, [
 
 这类追加配置会直接拼接到默认配置数组末尾，不会自动继承默认插件链。
 
+## 自定义构建入口与产物
+
+`generateConfig` 现在支持第三个参数 `options`，可以用来控制：
+
+- 自定义 `input`、`cssInput`
+- 自定义输出路径 `output`
+- 自定义 UMD 导出名 `exportName`
+- 自定义构建格式 `formats`（可选：`umd`、`cjs`、`esm`）
+
+示例：
+
+```js
+import generateConfig from "@skax/rollup-config";
+import fs from "fs";
+
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
+
+export default generateConfig(pkg, [], {
+  input: "src/custom-entry.ts",
+  cssInput: "src/custom-style.ts",
+  exportName: "CustomGlobal",
+  formats: ["cjs", "esm"],
+  output: {
+    cjs: "build/index.cjs",
+    esm: "build/index.mjs",
+    style: "build/style.cjs",
+    types: "build/index.d.ts",
+  },
+});
+```
+
 ## 环境变量
 
 ### `NODE_ENV`
@@ -173,25 +204,25 @@ dist/
 
 这套配置是“强约定优先”，它的优势是省配置，代价是灵活性有限。
 
-### 1. 入口路径是固定的
+### 1. UMD 生成有前置条件
 
-- 业务入口固定为 `src/index.ts`。
-- UMD 入口固定检测 `src/main.ts`。
-- 样式入口固定检测 `src/style.ts`。
+虽然 `input`、`cssInput` 和 `output` 已支持自定义，但 UMD 是否生成仍然取决于 `src/main.ts` 是否存在。
 
-如果你的项目采用其他目录结构，需要自行包装或 fork 当前配置。
+如果你希望生成 UMD，请确保该文件存在。
 
-### 2. 输出文件名基本固定
+### 2. 默认规则依然是约定优先
 
-默认输出路径和文件名已经写死为：
+即便支持自定义，开箱默认仍使用以下路径：
 
-- `dist/index.cjs`
-- `dist/index.mjs`
-- `dist/index.umd.js`
-- `dist/style/css.js`
-- `dist/types/index.d.ts`
+- `input: src/index.ts`
+- `cssInput: src/style.ts`
+- `output.cjs: dist/index.cjs`
+- `output.esm: dist/index.mjs`
+- `output.umd: dist/index.umd.js`
+- `output.style: dist/style/css.js`
+- `output.types: dist/types/index.d.ts`
 
-不适合需要大量定制产物命名规则的项目。
+如果项目需要完全不同的构建策略，依然建议在外层组合或扩展配置。
 
 ### 3. 只自动 external `dependencies`
 
@@ -211,9 +242,11 @@ dist/
 
 如果你需要 CSS Modules、Less、Tailwind 专用链路或更复杂的 PostCSS 组合，当前配置并没有直接暴露完整的细粒度开关。
 
-### 5. UMD 生成有前置条件
+### 5. 构建格式范围固定
 
-只有 `src/main.ts` 存在时才会生成 UMD 包。这更适合需要浏览器直出的场景；如果你的库只面向现代打包器，完全可以不提供这个文件。
+`formats` 目前只支持：`umd`、`cjs`、`esm`。
+
+如果需要 iife 或 system 等额外格式，需要通过第二个参数追加自定义构建配置。
 
 ### 6. 开发服务不是通用 dev server
 
