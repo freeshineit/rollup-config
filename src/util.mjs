@@ -2,7 +2,7 @@ import { upperCamel } from "@skax/camel";
 import fs from "fs";
 
 /**
- * Format a date value to YYYY-MM-DD.
+ * Format a date value to YYYY-MM-DD in UTC.
  * @param {Date | string | number} [date=new Date()] Date instance or parsable date input.
  * @returns {string}
  * @example
@@ -11,9 +11,19 @@ import fs from "fs";
  */
 export function formatDate(date = new Date()) {
   const parsedDate = date instanceof Date ? date : new Date(date);
-  const year = parsedDate.getFullYear();
-  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
-  const day = String(parsedDate.getDate()).padStart(2, "0");
+
+  // Handle invalid date
+  if (Number.isNaN(parsedDate.getTime())) {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(now.getUTCDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  const year = parsedDate.getUTCFullYear();
+  const month = String(parsedDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getUTCDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
@@ -58,6 +68,7 @@ export function getOutputFiles(output) {
  * @param {string} args.styleInput Style entry.
  * @param {{ umd: string, cjs: string, esm: string, style: string }} args.outputFiles Output file map.
  * @param {boolean} args.isReact React mode flag.
+ * @param {boolean} args.isProduction Production mode flag.
  * @param {string} args.banner Banner text.
  * @param {string} args.exportName UMD global export name.
  * @returns {Array<object>}
@@ -72,9 +83,8 @@ export function getOutputFiles(output) {
  *   exportName: "Demo",
  * });
  */
-export function createDefaultConfigs({ input, umdInput, styleInput, outputFiles, isReact, banner, exportName }) {
+export function createDefaultConfigs({ input, umdInput, styleInput, outputFiles, isReact, isProduction, banner, exportName }) {
   const configs = [];
-  const isProduction = process.env.NODE_ENV === "production";
 
   if (fs.existsSync(umdInput)) {
     configs.push({

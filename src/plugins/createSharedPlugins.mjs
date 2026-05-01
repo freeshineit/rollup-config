@@ -39,12 +39,16 @@ import { injectCssRequire } from "./injectCssRequire.mjs";
  */
 export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, terserPlugin }) {
   return [
-    eslint({
-      throwOnError: true, // lint 结果有错误将会抛出异常
-      // throwOnWarning: true,
-      include: ["src/**/*.ts", "src/**/*.js", "src/**/*.cjs", "src/**/*.mjs", "src/**/*.jsx", "src/**/*.tsx"],
-      exclude: ["node_modules/**", "**/__tests__/**"],
-    }),
+    // 生产构建跳过 ESLint 以提升构建速度
+    ...(!isProduction
+      ? [
+          eslint({
+            throwOnError: true,
+            include: ["src/**/*.ts", "src/**/*.js", "src/**/*.cjs", "src/**/*.mjs", "src/**/*.jsx", "src/**/*.tsx"],
+            exclude: ["node_modules/**", "**/__tests__/**"],
+          }),
+        ]
+      : []),
     // 需要和 tsconfig.json 配置 paths 一致
     alias({
       entries: [
@@ -95,11 +99,11 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
           },
         ],
       ],
-      include: ["/**/*.scss", "/**/*.sass", "/**/*.css"],
+      include: ["**/*.scss", "**/*.sass", "**/*.css"],
       includePaths: ["src/", "node_modules/"],
       // 处理从 node_modules 导入
       importer(path) {
-        return { file: path[0] === "~" ? path.substr(1) : path };
+        return { file: path[0] === "~" ? path.slice(1) : path };
       },
     }),
     !isProduction && entry.output[0].format === "umd" && pkg.port

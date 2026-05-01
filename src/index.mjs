@@ -5,6 +5,9 @@ import { createTerserPlugin } from "./plugins/createTerserPlugin.mjs";
 import { createSharedPlugins } from "./plugins/createSharedPlugins.mjs";
 import { createDefaultConfigs, formatDate, getDefaultExportName, getOutputFiles } from "./util.mjs";
 
+/** @type {readonly string[]} UMD 构建中不作 external 的运行时依赖 */
+const UMD_EXTERNAL = Object.freeze(["react/jsx-runtime", "react", "clsx"]);
+
 /**
  * @description rollup config function
  * @param {object} pkg package.json merged with build options
@@ -49,11 +52,15 @@ function generateConfig(pkg, configs = []) {
   const isProduction = process.env.NODE_ENV === "production";
   const isReact = process.env.REACT_ENV === "react";
 
+  // Sanitize banner content to prevent `*/` breaking the comment
+  const safeName = String(pkg.name || "").replace(/\*\//g, "*\\/");
+  const safeAuthor = String(pkg.author || "").replace(/\*\//g, "*\\/");
+
   // prettier-ignore
   const banner = `/*
-* ${pkg.name} v${pkg.version}
-* Copyright (c) ${formatDate()} ${pkg.author}
-* Released under the MIT License.
+* ${safeName} v${pkg.version}
+* Copyright (c) ${formatDate()} ${safeAuthor}
+* Released under the ${pkg.license || "MIT"} License.
 */`;
 
   const input = pkg.input || "src/index.ts";
@@ -70,17 +77,23 @@ function generateConfig(pkg, configs = []) {
     styleInput,
     outputFiles,
     isReact,
+    isProduction,
     banner,
     exportName,
   });
 
-  const terserPlugin = createTerserPlugin();
-
   return [
     ...defaultConfigs.map((entry) => ({
       ...entry,
-      external: entry.output[0].format === "umd" ? ["react/jsx-runtime", "react", "clsx"] : ["react/jsx-runtime", "react", "clsx", ...externals],
-      plugins: createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, terserPlugin }),
+      external: entry.output[0].format === "umd" ? [...UMD_EXTERNAL] : [...UMD_EXTERNAL, ...externals],
+      plugins: createSharedPlugins({
+        entry,
+        pkg,
+        styleInput,
+        isProduction,
+        isReact,
+        terserPlugin: isProduction ? createTerserPlugin() : undefined,
+      }),
     })),
     types && {
       input,

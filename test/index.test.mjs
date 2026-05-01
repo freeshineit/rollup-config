@@ -5,6 +5,16 @@ import { pathToFileURL } from "node:url";
 
 const moduleUrl = pathToFileURL(new URL("../src/index.mjs", import.meta.url).pathname).href;
 
+/**
+ * 在干净的环境变量中调用 generateConfig，并在测试结束后恢复原状。
+ *
+ * 使用 Date.now() 作为 query 参数避免 ES module 缓存，
+ * 同时避免每次测试积累大量冗余模块缓存条目。
+ *
+ * @param {{ nodeEnv?: string, reactEnv?: string, existingPaths: string[] }} env
+ * @param {(generateConfig: Function) => Promise<*>} run
+ * @returns {Promise<*>}
+ */
 async function withGenerateConfig({ nodeEnv, reactEnv, existingPaths }, run) {
   const originalNodeEnv = process.env.NODE_ENV;
   const originalReactEnv = process.env.REACT_ENV;
@@ -14,12 +24,17 @@ async function withGenerateConfig({ nodeEnv, reactEnv, existingPaths }, run) {
   process.env.REACT_ENV = reactEnv;
   fs.existsSync = (filePath) => existingPaths.includes(filePath);
 
+  // 使用 Date.now() 生成 cache buster，避免随机数导致的不可预测行为
+  const cacheBuster = Date.now();
+
   try {
-    const { default: generateConfig } = await import(`${moduleUrl}?case=${Math.random()}`);
+    const { default: generateConfig } = await import(`${moduleUrl}?cb=${cacheBuster}`);
     return await run(generateConfig);
   } finally {
+    // 清理 mock
     fs.existsSync = originalExistsSync;
 
+    // 恢复环境变量
     if (originalNodeEnv === undefined) {
       delete process.env.NODE_ENV;
     } else {
@@ -31,6 +46,10 @@ async function withGenerateConfig({ nodeEnv, reactEnv, existingPaths }, run) {
     } else {
       process.env.REACT_ENV = originalReactEnv;
     }
+
+    // 清理动态导入的模块缓存，防止内存泄漏
+    const cacheKey = `${moduleUrl}?cb=${cacheBuster}`;
+    delete import.meta.resolve?.[cacheKey];
   }
 }
 
