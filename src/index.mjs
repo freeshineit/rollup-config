@@ -159,6 +159,27 @@ function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, te
  * @param {string=} options.output.types dts output file
  * @param {string=} options.exportName umd export name
  * @param {Array<"umd"|"cjs"|"esm">=} options.formats build formats
+ * @example
+ * generateConfig(
+ *   {
+ *     name: "@scope/button",
+ *     version: "1.0.0",
+ *     author: "your-name",
+ *     dependencies: { clsx: "^2.1.1" },
+ *   },
+ *   [],
+ *   {
+ *     input: "src/index.ts",
+ *     styleInput: "src/style.ts",
+ *     formats: ["cjs", "esm"],
+ *     output: {
+ *       cjs: "dist/index.cjs",
+ *       esm: "dist/index.mjs",
+ *       style: "dist/style/css.js",
+ *       types: "dist/types/index.d.ts",
+ *     },
+ *   },
+ * );
  * @returns
  */
 function generateConfig(pkg, configs, options = {}) {
