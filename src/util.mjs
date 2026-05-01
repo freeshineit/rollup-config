@@ -37,15 +37,15 @@ export function getDefaultExportName(pkgName) {
  * @param {object=} output Custom output file map.
  * @returns {{ umd: string, cjs: string, esm: string, style: string, types: string }}
  * @example
- * getOutputFiles({ cjs: "build/index.cjs" });
+ * getOutputFiles({ main: "build/index.cjs" });
  * // => { umd: "dist/index.umd.js", cjs: "build/index.cjs", esm: "dist/index.mjs", style: "dist/style/css.js", types: "dist/types/index.d.ts" }
  */
 export function getOutputFiles(output) {
   return {
-    umd: output?.umd || "dist/index.umd.js",
-    cjs: output?.cjs || "dist/index.cjs",
-    esm: output?.esm || "dist/index.mjs",
-    style: output?.style || "dist/style/css.js",
+    umd: output?.umdOut || "dist/index.umd.js",
+    cjs: output?.main || "dist/index.cjs",
+    esm: output?.module || "dist/index.mjs",
+    style: output?.styleOut || "dist/style/css.js",
     types: output?.types || "dist/types/index.d.ts",
   };
 }

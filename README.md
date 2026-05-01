@@ -35,8 +35,22 @@ import fs from "fs";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
-export default generateConfig(pkg);
+export default generateConfig({
+  ...pkg,
+  // 业务入口（默认 src/index.ts）
+  input: "src/index.ts",
+  // UMD 入口（文件存在时才会构建 UMD）
+  umdInput: "src/main.ts",
+  // UMD 输出文件
+  umdOut: "dist/index.umd.js",
+  // 样式入口（文件存在时才会构建样式产物）
+  styleInput: "src/style.ts",
+  // 样式输出文件
+  styleOut: "dist/style/css.js",
+});
 ```
+
+如果希望生成 UMD 和样式产物，请确保 `umdInput`、`styleInput` 指向的文件实际存在。
 
 `generateConfig` 直接读取 `package.json` 对象，无需额外的 `options` 参数。输出路径由 `pkg.main`、`pkg.module`、`pkg.types`、`pkg.umdOut`、`pkg.styleOut` 驱动，与 `package.json` 标准字段保持一致。
 
