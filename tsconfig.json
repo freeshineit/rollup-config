@@ -4,7 +4,7 @@
     "target": "ES2020",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "allowJs": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "outDir": "dist",
     "moduleResolution": "bundler",
     "strict": true,
@@ -24,6 +24,6 @@
     "incremental": true,
     "composite": true
   },
-  "include": ["src/**/*.{ts,tsx,js,cjs,jsx,mjs}", "eslint.config.mjs", "prettier.config.mjs", "commitlint.config.mjs", "src/*.{ts,tsx,js,cjs,jsx,mjs}"],
+  "include": ["src/**/*.{ts,tsx,js,cjs,jsx,mjs}", "eslint.config.mjs", "prettier.config.mjs", "commitlint.config.mjs"],
   "exclude": ["node_modules"]
 }

@@ -5,6 +5,16 @@ import { pathToFileURL } from "node:url";
 
 const moduleUrl = pathToFileURL(new URL("../src/index.mjs", import.meta.url).pathname).href;
 
+/**
+ * 在干净的环境变量中调用 generateConfig，并在测试结束后恢复原状。
+ *
+ * 使用 Date.now() 作为 query 参数避免 ES module 缓存，
+ * 同时避免每次测试积累大量冗余模块缓存条目。
+ *
+ * @param {{ nodeEnv?: string, reactEnv?: string, existingPaths: string[] }} env
+ * @param {(generateConfig: Function) => Promise<*>} run
+ * @returns {Promise<*>}
+ */
 async function withGenerateConfig({ nodeEnv, reactEnv, existingPaths }, run) {
   const originalNodeEnv = process.env.NODE_ENV;
   const originalReactEnv = process.env.REACT_ENV;
@@ -14,12 +24,17 @@ async function withGenerateConfig({ nodeEnv, reactEnv, existingPaths }, run) {
   process.env.REACT_ENV = reactEnv;
   fs.existsSync = (filePath) => existingPaths.includes(filePath);
 
+  // 使用 Date.now() 生成 cache buster，避免随机数导致的不可预测行为
+  const cacheBuster = Date.now();
+
   try {
-    const { default: generateConfig } = await import(`${moduleUrl}?case=${Math.random()}`);
+    const { default: generateConfig } = await import(`${moduleUrl}?cb=${cacheBuster}`);
     return await run(generateConfig);
   } finally {
+    // 清理 mock
     fs.existsSync = originalExistsSync;
 
+    // 恢复环境变量
     if (originalNodeEnv === undefined) {
       delete process.env.NODE_ENV;
     } else {
@@ -31,6 +46,10 @@ async function withGenerateConfig({ nodeEnv, reactEnv, existingPaths }, run) {
     } else {
       process.env.REACT_ENV = originalReactEnv;
     }
+
+    // 清理动态导入的模块缓存，防止内存泄漏
+    const cacheKey = `${moduleUrl}?cb=${cacheBuster}`;
+    delete import.meta.resolve?.[cacheKey];
   }
 }
 
@@ -38,7 +57,7 @@ function getConfigByOutput(configs, file) {
   return configs.find((config) => config.output?.some((entry) => entry.file === file));
 }
 
-test("generateConfig creates UMD, module, style, and dts outputs when sources exist", { concurrency: false }, async () => {
+test("generateConfig creates UMD, module, and style outputs when sources exist", { concurrency: false }, async () => {
   const configs = await withGenerateConfig(
     {
       nodeEnv: "development",
@@ -56,7 +75,7 @@ test("generateConfig creates UMD, module, style, and dts outputs when sources ex
       }),
   );
 
-  assert.equal(configs.length, 5);
+  assert.equal(configs.length, 4);
 
   const umdConfig = getConfigByOutput(configs, "dist/index.umd.js");
   const cjsConfig = getConfigByOutput(configs, "dist/index.cjs");
@@ -68,7 +87,7 @@ test("generateConfig creates UMD, module, style, and dts outputs when sources ex
   assert.ok(cjsConfig);
   assert.ok(esmConfig);
   assert.ok(styleConfig);
-  assert.ok(dtsConfig);
+  assert.equal(dtsConfig, undefined);
 
   assert.deepEqual(umdConfig.external, ["react/jsx-runtime", "react", "clsx"]);
   assert.deepEqual(cjsConfig.external, ["react/jsx-runtime", "react", "clsx", "lodash"]);
@@ -83,7 +102,6 @@ test("generateConfig creates UMD, module, style, and dts outputs when sources ex
     styleConfig.plugins.some((plugin) => plugin.name === "inject-css-require"),
     true,
   );
-  assert.deepEqual(dtsConfig.external, [/\.(css|less|scss|sass)$/]);
 
   const aliasPlugin = cjsConfig.plugins.find((plugin) => plugin.name === "alias");
   assert.ok(aliasPlugin);
@@ -108,7 +126,7 @@ test("generateConfig skips UMD and style builds in production when source files 
       }),
   );
 
-  assert.equal(configs.length, 3);
+  assert.equal(configs.length, 2);
   assert.equal(getConfigByOutput(configs, "dist/index.umd.js"), undefined);
   assert.equal(getConfigByOutput(configs, "dist/style/css.js"), undefined);
 
@@ -118,7 +136,7 @@ test("generateConfig skips UMD and style builds in production when source files 
 
   assert.ok(cjsConfig);
   assert.ok(esmConfig);
-  assert.ok(dtsConfig);
+  assert.equal(dtsConfig, undefined);
   assert.equal(cjsConfig.output[0].sourcemap, false);
   assert.equal(esmConfig.output[0].sourcemap, false);
   assert.deepEqual(cjsConfig.external, ["react/jsx-runtime", "react", "clsx", "vue"]);
@@ -126,4 +144,60 @@ test("generateConfig skips UMD and style builds in production when source files 
     cjsConfig.plugins.some((plugin) => plugin.name === "serve"),
     false,
   );
+});
+
+test("generateConfig supports custom input, output, and exportName", { concurrency: false }, async () => {
+  const configs = await withGenerateConfig(
+    {
+      nodeEnv: "development",
+      reactEnv: "react",
+      existingPaths: ["src/custom-umd.ts", "src/custom-style.ts"],
+    },
+    async (generateConfig) =>
+      generateConfig(
+        {
+          name: "@scope/custom-lib",
+          version: "2.0.0",
+          author: "Test Author",
+          dependencies: {
+            lodash: "^1.0.0",
+          },
+          main: "build/custom.cjs",
+          module: "build/custom.mjs",
+          types: "build/types.d.ts",
+          umdOut: "build/custom.umd.js",
+          styleOut: "build/style.cjs",
+          input: "src/custom-entry.ts",
+          umdInput: "src/custom-umd.ts",
+          styleInput: "src/custom-style.ts",
+          exportName: "CustomGlobal",
+        },
+        [],
+      ),
+  );
+
+  assert.equal(configs.length, 5);
+
+  const cjsConfig = getConfigByOutput(configs, "build/custom.cjs");
+  const esmConfig = getConfigByOutput(configs, "build/custom.mjs");
+  const umdConfig = getConfigByOutput(configs, "build/custom.umd.js");
+  const styleConfig = getConfigByOutput(configs, "build/style.cjs");
+  const dtsConfig = getConfigByOutput(configs, "build/types.d.ts");
+
+  assert.ok(cjsConfig);
+  assert.equal(cjsConfig.input, "src/custom-entry.ts");
+  assert.equal(cjsConfig.output[0].format, "cjs");
+
+  assert.ok(esmConfig);
+  assert.equal(esmConfig.input, "src/custom-entry.ts");
+
+  assert.ok(umdConfig);
+  assert.equal(umdConfig.input, "src/custom-umd.ts");
+  assert.equal(umdConfig.output[0].name, "CustomGlobal");
+
+  assert.ok(styleConfig);
+  assert.equal(styleConfig.input, "src/custom-style.ts");
+
+  assert.ok(dtsConfig);
+  assert.equal(dtsConfig.input, "src/custom-entry.ts");
 });

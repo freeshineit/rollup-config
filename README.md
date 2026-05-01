@@ -35,8 +35,24 @@ import fs from "fs";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
-export default generateConfig(pkg);
+export default generateConfig({
+  ...pkg,
+  // 业务入口（默认 src/index.ts）
+  input: "src/index.ts",
+  // UMD 入口（文件存在时才会构建 UMD）
+  umdInput: "src/main.ts",
+  // UMD 输出文件
+  umdOut: "dist/index.umd.js",
+  // 样式入口（文件存在时才会构建样式产物）
+  styleInput: "src/style.ts",
+  // 样式输出文件
+  styleOut: "dist/style/css.js",
+});
 ```
+
+如果希望生成 UMD 和样式产物，请确保 `umdInput`、`styleInput` 指向的文件实际存在。
+
+`generateConfig` 直接读取 `package.json` 对象，无需额外的 `options` 参数。输出路径由 `pkg.main`、`pkg.module`、`pkg.types`、`pkg.umdOut`、`pkg.styleOut` 驱动，与 `package.json` 标准字段保持一致。
 
 然后在 `package.json` 中添加构建脚本：
 
@@ -55,28 +71,28 @@ export default generateConfig(pkg);
 
 ```text
 src/
-	index.ts
-	main.ts      // 可选，存在时才会生成 UMD
-	style.ts     // 可选，存在时才会生成样式入口产物
+  index.ts
+  main.ts      // 可选，作为默认 UMD 入口
+  style.ts     // 可选，作为默认样式入口
 ```
 
 其中：
 
-- `src/index.ts` 是固定的业务入口。
-- `src/main.ts` 存在时，生成 `dist/index.umd.js`。
-- `src/style.ts` 存在时，生成 `dist/style/css.js`，并复制相关样式文件到 `dist/style`。
+- `src/index.ts` 是默认业务入口。
+- `src/main.ts` 是默认 UMD 入口，文件存在时生成 UMD。
+- `src/style.ts` 是默认样式入口，文件存在时生成 `dist/style/css.js`，并复制相关样式文件到 `dist/style`。
 
 ## 会生成什么
 
 默认会根据入口文件情况生成以下产物：
 
-| 条件                | 产物                    |
-| ------------------- | ----------------------- |
-| 始终生成            | `dist/index.cjs`        |
-| 始终生成            | `dist/index.mjs`        |
-| 始终生成            | `dist/types/index.d.ts` |
-| 存在 `src/main.ts`  | `dist/index.umd.js`     |
-| 存在 `src/style.ts` | `dist/style/css.js`     |
+| 条件                   | 产物                    |
+| ---------------------- | ----------------------- |
+| 始终生成               | `dist/index.cjs`        |
+| 始终生成               | `dist/index.mjs`        |
+| 始终生成               | `dist/types/index.d.ts` |
+| 存在 `umdInput` 文件   | `umdOut`                |
+| 存在 `styleInput` 文件 | `styleOut`              |
 
 ## 默认能力
 
@@ -96,22 +112,34 @@ src/
 
 调用 `generateConfig(pkg)` 时，会读取以下字段：
 
-| 字段           | 类型             | 说明                            |
-| -------------- | ---------------- | ------------------------------- |
-| `name`         | `string`         | 用于 banner 和 UMD 导出名       |
-| `version`      | `string`         | 用于 banner 和版本替换          |
-| `author`       | `string`         | 用于 banner                     |
-| `dependencies` | `object`         | 自动转为 external               |
-| `compiler`     | `"tsc" \| "swc"` | 指定编译器                      |
-| `port`         | `number`         | 开发态 UMD 场景下用于本地 serve |
+| 字段           | 类型             | 说明                                       |
+| -------------- | ---------------- | ------------------------------------------ |
+| `name`         | `string`         | 用于 banner 和 UMD 导出名                  |
+| `version`      | `string`         | 用于 banner 和版本替换                     |
+| `author`       | `string`         | 用于 banner                                |
+| `main`         | `string`         | CJS 输出路径，默认 `dist/index.cjs`        |
+| `module`       | `string`         | ESM 输出路径，默认 `dist/index.mjs`        |
+| `types`        | `string`         | DTS 输出路径，默认 `dist/types/index.d.ts` |
+| `dependencies` | `object`         | 自动转为 external                          |
+| `compiler`     | `"tsc" \| "swc"` | 指定编译器，默认 `swc`                     |
+| `port`         | `number`         | 开发态 UMD 场景下用于本地 serve            |
+| `input`        | `string`         | 脚本入口，默认 `src/index.ts`              |
+| `umdInput`     | `string`         | UMD 入口，默认 `src/main.ts`               |
+| `styleInput`   | `string`         | 样式入口，默认 `src/style.ts`              |
+| `umdOut`       | `string`         | UMD 输出路径，默认 `dist/index.umd.js`     |
+| `styleOut`     | `string`         | 样式产物路径，默认 `dist/style/css.js`     |
+| `exportName`   | `string`         | UMD 全局导出名，默认由 `name` 推导         |
 
-示例：
+示例 `package.json`：
 
 ```json
 {
   "name": "@scope/button",
   "version": "1.0.0",
   "author": "your-name",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/types/index.d.ts",
   "compiler": "swc",
   "port": 3000
 }
@@ -137,6 +165,34 @@ export default generateConfig(pkg, [
 
 这类追加配置会直接拼接到默认配置数组末尾，不会自动继承默认插件链。
 
+## 自定义构建入口与产物
+
+将自定义字段直接写入传入的 `pkg` 对象即可：
+
+```js
+import generateConfig from "@skax/rollup-config";
+import fs from "fs";
+
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
+
+export default generateConfig(
+  {
+    ...pkg,
+    input: "src/custom-entry.ts",
+    umdInput: "src/custom-umd.ts",
+    styleInput: "src/custom-style.ts",
+    umdOut: "build/custom.umd.js",
+    styleOut: "build/style.cjs",
+    exportName: "CustomGlobal",
+    // main/module/types 优先从 package.json 读取，也可在此覆盖
+    main: "build/index.cjs",
+    module: "build/index.mjs",
+    types: "build/index.d.ts",
+  },
+  [],
+);
+```
+
 ## 环境变量
 
 ### `NODE_ENV`
@@ -155,7 +211,7 @@ export default generateConfig(pkg, [
 NODE_ENV=production REACT_ENV=react rollup -c
 ```
 
-如果项目中存在 `src/main.ts` 与 `src/style.ts`，通常会得到：
+如果项目中存在默认 `src/main.ts` 与 `src/style.ts`，通常会得到：
 
 ```text
 dist/
@@ -173,25 +229,26 @@ dist/
 
 这套配置是“强约定优先”，它的优势是省配置，代价是灵活性有限。
 
-### 1. 入口路径是固定的
+### 1. UMD 生成有前置条件
 
-- 业务入口固定为 `src/index.ts`。
-- UMD 入口固定检测 `src/main.ts`。
-- 样式入口固定检测 `src/style.ts`。
+虽然 `input`、`umdInput`、`styleInput` 和输出路径已支持自定义，但 UMD 是否生成仍然取决于 `umdInput` 指向的文件是否存在。
 
-如果你的项目采用其他目录结构，需要自行包装或 fork 当前配置。
+如果你希望生成 UMD，请确保 `umdInput` 对应文件存在。
 
-### 2. 输出文件名基本固定
+### 2. 默认规则依然是约定优先
 
-默认输出路径和文件名已经写死为：
+即便支持自定义，开箱默认仍使用以下路径：
 
-- `dist/index.cjs`
-- `dist/index.mjs`
-- `dist/index.umd.js`
-- `dist/style/css.js`
-- `dist/types/index.d.ts`
+- `input: src/index.ts`
+- `umdInput: src/main.ts`
+- `styleInput: src/style.ts`
+- `main（cjs）: dist/index.cjs`
+- `module（esm）: dist/index.mjs`
+- `types（dts）: dist/types/index.d.ts`
+- `umdOut（仅 umdInput 文件存在时）: dist/index.umd.js`
+- `styleOut: dist/style/css.js`
 
-不适合需要大量定制产物命名规则的项目。
+如果项目需要完全不同的构建策略，依然建议在外层组合或扩展配置。
 
 ### 3. 只自动 external `dependencies`
 
@@ -207,13 +264,15 @@ dist/
 
 - 默认处理 `.scss`、`.sass`、`.css`
 - 内置 `autoprefixer` 和 `cssnano`
-- 样式入口构建依赖 `src/style.ts`
+- 样式入口构建依赖 `styleInput` 指向文件（默认 `src/style.ts`）
 
 如果你需要 CSS Modules、Less、Tailwind 专用链路或更复杂的 PostCSS 组合，当前配置并没有直接暴露完整的细粒度开关。
 
-### 5. UMD 生成有前置条件
+### 5. 构建格式范围固定
 
-只有 `src/main.ts` 存在时才会生成 UMD 包。这更适合需要浏览器直出的场景；如果你的库只面向现代打包器，完全可以不提供这个文件。
+内置默认只产出：`umd`、`cjs`、`esm` 这三种格式。
+
+如果需要 iife 或 system 等额外格式，需要通过第二个参数追加自定义构建配置。
 
 ### 6. 开发服务不是通用 dev server
 

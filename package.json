@@ -1,6 +1,6 @@
 {
   "name": "@skax/rollup-config",
-  "version": "0.1.1-beta.3",
+  "version": "1.0.1",
   "main": "./src/index.mjs",
   "types": "./src/index.mjs",
   "module": "./src/index.mjs",
@@ -16,8 +16,8 @@
     "test": "node --test",
     "lint": "eslint --fix \"./src/**/*.{ts,tsx,js,jsx,mjs,vue,cjs}\"",
     "lint:check": "eslint \"./src/**/*.{ts,tsx,js,jsx,mjs,vue,cjs}\"",
-    "fmt": "prettier --write \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs}\"",
-    "fmt:check": "prettier --check \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs}\"",
+    "fmt": "prettier --write \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs,css,scss,sass}\"",
+    "fmt:check": "prettier --check \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs,css,scss,sass}\"",
     "prepare": "husky"
   },
   "keywords": [
@@ -56,7 +56,6 @@
     "rollup-plugin-copy": "^3.5.0",
     "@skax/camel": "^0.2.6",
     "@swc/core": "^1.15.7",
-    "dayjs": "^1.11.13",
     "rollup": "^4.54.0",
     "rollup-plugin-dts": "^6.3.0",
     "rollup-plugin-serve": "^2.0.3",

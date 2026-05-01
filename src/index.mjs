@@ -1,258 +1,103 @@
-import commonjs from "@rollup/plugin-commonjs";
-import resolve from "@rollup/plugin-node-resolve";
-import swc from "@rollup/plugin-swc";
-import serve from "rollup-plugin-serve";
-import { upperCamel } from "@skax/camel";
 import { dts } from "rollup-plugin-dts";
-import eslint from "@rollup/plugin-eslint";
-import replace from "@rollup/plugin-replace";
-import typescript from "@rollup/plugin-typescript";
 import alias from "@rollup/plugin-alias";
-import copy from "rollup-plugin-copy";
-import terser from "@rollup/plugin-terser";
-import dayjs from "dayjs";
-import postcss from "rollup-plugin-postcss";
-import cssnano from "cssnano";
-import autoprefixer from "autoprefixer";
-import fs from "fs";
 import { resolve as pathResolve } from "path";
-import { injectCssRequire } from "./injectCssRequire.mjs";
+import { createTerserPlugin } from "./plugins/createTerserPlugin.mjs";
+import { createSharedPlugins } from "./plugins/createSharedPlugins.mjs";
+import { createDefaultConfigs, formatDate, getDefaultExportName, getOutputFiles } from "./util.mjs";
+
+/** @type {readonly string[]} UMD 构建中不作 external 的运行时依赖 */
+const UMD_EXTERNAL = Object.freeze(["react/jsx-runtime", "react", "clsx"]);
 
 /**
  * @description rollup config function
- * @param {object} pkg package.json
- * @param {string} pkg.name name
- * @param {string=} pkg.main main
- * @param {version=} pkg.version string
- * @param {string=} pkg.author author
- * @param {object=} pkg.dependencies dependencies
- * @param {("tsc" | "swc")=} pkg.compiler compiler
- * @param {port=} pkg.port port
- * @param {Array} configs config[]
+ * @param {object} pkg package.json merged with build options
+ * @param {string} pkg.name name field in package.json, used for banner and default export name
+ * @param {string=} pkg.main main entry (cjs output)
+ * @param {version=} pkg.version string version
+ * @param {string=} pkg.author author name for banner
+ * @param {object=} pkg.dependencies dependencies object
+ * @param {("tsc" | "swc")=} pkg.compiler compiler choice, default to swc
+ * @param {port=} pkg.port port for development server; setting it enables the serve plugin
+ * @param {string=} pkg.input entry input, default to src/index.ts
+ * @param {string=} pkg.umdInput umd input, default to src/main.ts
+ * @param {string=} pkg.styleInput style input, default to src/style.ts
+ * @param {string=} pkg.main cjs output file (package.json main)
+ * @param {string=} pkg.module esm output file (package.json module)
+ * @param {string=} pkg.types dts output file (package.json types)
+ * @param {string=} pkg.umdOut umd output file, default to dist/index.umd.js
+ * @param {string=} pkg.styleOut style output file, default to dist/css.js, e.g. dist/style/css.js, must not be index.js to avoid overwriting the main entry
+ * @param {string=} pkg.exportName umd export name when format is umd, default to PascalCase of package name
+ * @param {Array=} configs config[]
+ * @example
+ * generateConfig(
+ *   {
+ *     name: "@scope/button",
+ *     version: "1.0.0",
+ *     author: "your-name",
+ *     dependencies: { clsx: "^2.1.1" },
+ *     main: "dist/index.cjs",
+ *     module: "dist/index.mjs",
+ *     types: "dist/types/index.d.ts",
+ *     input: "src/index.ts",
+ *     umdInput: "src/main.ts",
+ *     styleInput: "src/style.ts",
+ *     umdOut: "dist/index.umd.js",
+ *     styleOut: "dist/style/css.js",
+ *   },
+ *   [],
+ * );
  * @returns
  */
-function generateConfig(pkg, configs) {
+function generateConfig(pkg, configs = []) {
   const isProduction = process.env.NODE_ENV === "production";
   const isReact = process.env.REACT_ENV === "react";
 
+  // Sanitize banner content to prevent `*/` breaking the comment
+  const safeName = String(pkg.name || "").replace(/\*\//g, "*\\/");
+  const safeAuthor = String(pkg.author || "").replace(/\*\//g, "*\\/");
+
   // prettier-ignore
   const banner = `/*
-* ${pkg.name} v${pkg.version}
-* Copyright (c) ${dayjs().format("YYYY-MM-DD")} ${pkg.author}
-* Released under the MIT License.
+* ${safeName} v${pkg.version}
+* Copyright (c) ${formatDate()} ${safeAuthor}
+* Released under the ${pkg.license || "MIT"} License.
 */`;
 
-  const input = "src/index.ts";
-  const cssInput = "src/style.ts";
-
-  // 判断是否需要生成 UMD 格式的包，主要是为了兼容一些老旧的环境，如果没有 src/main.ts 就不生成 UMD 包
-  const hasUmd = fs.existsSync("src/main.ts");
-  // 如果有需要可以设置
-  const hasStyle = fs.existsSync(cssInput);
-
+  const input = pkg.input || "src/index.ts";
+  const umdInput = pkg.umdInput || "src/main.ts";
+  const styleInput = pkg.styleInput || "src/style.ts";
+  const { umdOut, main, module, types, styleOut } = pkg;
+  const outputFiles = getOutputFiles({ umdOut, main, module, types, styleOut });
   const externals = Object.keys(pkg?.dependencies || {});
+  const exportName = pkg.exportName || getDefaultExportName(pkg?.name);
 
-  // prettier-ignore
-  const exportName = upperCamel(pkg?.name?.split("/").length > 1 ? pkg?.name?.split("/")[pkg?.name?.split("/").length - 1] : pkg?.name, '-');
-
-  const defaultConfigs = [
-    hasUmd
-      ? {
-          input,
-          output: [
-            {
-              file: "dist/index.umd.js",
-              format: "umd",
-              name: exportName,
-              sourcemap: !isProduction,
-              banner,
-              globals: isReact
-                ? {
-                    react: "React",
-                    clsx: "clsx",
-                  }
-                : {},
-            },
-          ],
-        }
-      : null,
-    {
-      input,
-      output: [
-        {
-          file: "dist/index.cjs",
-          format: "cjs",
-          exports: "named", // 添加这一行
-          sourcemap: !isProduction,
-          banner,
-        },
-      ],
-    },
-    {
-      input,
-      output: [
-        {
-          exports: "named",
-          file: "dist/index.mjs",
-          format: "esm",
-          sourcemap: !isProduction,
-          banner,
-        },
-      ],
-    },
-    hasStyle
-      ? {
-          input: cssInput,
-          output: [
-            {
-              file: "dist/style/css.js",
-              format: "cjs",
-              // https://www.rollupjs.com/configuration-options/#output-exports
-              // exports: 'named',
-              sourcemap: !isProduction,
-              banner,
-            },
-          ],
-        }
-      : null,
-  ].filter(Boolean);
-
-  const terserPlugin = terser({
-    compress: {
-      defaults: true,
-      drop_console: true, // 去除 console.log
-      drop_debugger: true, // 去除 debugger
-    }, // 禁用所有压缩功能
-    mangle: false, // 不混淆任何变量名（包括函数名） 混淆后可能会导致变量同名而被覆盖
-    format: {
-      beautify: false, // 保持代码格式
-      // comments: true, // 保留注释
-      comments: function (node, comment) {
-        if (comment.type === "comment2") {
-          // multiline comment
-          return comment.value.includes("Copyright (c) "); // 不可以使用变量
-        }
-      },
-    },
+  const defaultConfigs = createDefaultConfigs({
+    input,
+    umdInput,
+    styleInput,
+    outputFiles,
+    isReact,
+    isProduction,
+    banner,
+    exportName,
   });
 
   return [
     ...defaultConfigs.map((entry) => ({
       ...entry,
-      external: entry.output[0].format === "umd" ? ["react/jsx-runtime", "react", "clsx"] : ["react/jsx-runtime", "react", "clsx", ...externals],
-      plugins: [
-        eslint({
-          throwOnError: true, // lint 结果有错误将会抛出异常
-          // throwOnWarning: true,
-          include: ["src/**/*.ts", "src/**/*.js", "src/**/*.cjs", "src/**/*.mjs", "src/**/*.jsx", "src/**/*.tsx"],
-          exclude: ["node_modules/**", "**/__tests__/**"],
-        }),
-        // 需要和 tsconfig.json 配置 paths 一致
-        alias({
-          entries: [
-            {
-              find: /^@\/(.*)/,
-              replacement: pathResolve(process.cwd(), "src/$1"),
-            },
-          ],
-        }),
-        pkg.compiler === "tsc"
-          ? typescript({
-              declaration: false,
-            })
-          : swc({
-              // https://swc.rs/docs/configuration/swcrc
-              swc: {
-                jsc: {
-                  target: isReact ? "es2018" : "es5",
-                },
-              },
-              include: ["./src/**/*.{ts,js,cjs,mjs,tsx,jsx}"],
-            }),
-        resolve({
-          // extensions: ['.js', '.cjs', '.jsx', '.mjs', '.ts', '.tsx', '.json'],
-        }),
-        commonjs({
-          extensions: [".js", ".cjs", ".jsx", ".mjs", ".ts", ".tsx", ".json"],
-        }),
-        replace({
-          __VERSION__: `${pkg.version}`,
-          preventAssignment: true,
-        }),
-        postcss({
-          plugins: [autoprefixer(), cssnano({ preset: "default" })],
-          sourceMap: !isProduction,
-          /**
-           * https://www.npmjs.com/package/rollup-plugin-postcss#extract
-           * extract: true 将 CSS 提取到单独的文件中，默认为 false，即将 CSS 内联到 JavaScript 中。
-           * extract: 'styles.css' 将 CSS 提取到指定的文件中。
-           */
-          extract: true,
-          minimize: true,
-          use: [
-            [
-              "sass",
-              {
-                silenceDeprecations: ["legacy-js-api"],
-              },
-            ],
-          ],
-          include: ["/**/*.scss", "/**/*.sass", "/**/*.css"],
-          includePaths: ["src/", "node_modules/"],
-          // 处理从 node_modules 导入
-          importer(path) {
-            return { file: path[0] === "~" ? path.substr(1) : path };
-          },
-        }),
-        !isProduction && entry.output[0].format === "umd" && pkg.port
-          ? serve({
-              port: pkg.port,
-              contentBase: ["public", "dist"],
-            })
-          : null,
-        copy({
-          copyOnce: true,
-          flatten: false,
-          targets: [
-            { src: "src/**/*.scss", dest: "dist/style" },
-            {
-              src: "src/style.ts",
-              dest: "dist/style",
-              rename: "index.js",
-            },
-            // {
-            //   src: "./package.json",
-            //   dest: "./dist",
-            //   transform: (contents) => {
-            //     try {
-            //       const jsonObj = JSON.parse(contents);
-            //       delete jsonObj["scripts"];
-            //       delete jsonObj["devDependencies"];
-            //       jsonObj["main"] = "./dist/index.js";
-            //       jsonObj["module"] = "./dist/index.mjs";
-            //       jsonObj["types"] = "./dist/types/index.d.ts";
-            //       jsonObj["files"] = [
-            //         "dist",
-            //         "CHANGELOG.md",
-            //         "README.md",
-            //         "LICENSE",
-            //       ];
-            //       contents = JSON.stringify(jsonObj);
-            //     } catch (error) {}
-            //     return contents;
-            //   },
-            // },
-          ],
-        }),
-        // css.ts. => css.js 注入内容（require("./css.css");）
-        entry.input === cssInput ? injectCssRequire() : null,
-        isProduction ? terserPlugin : null,
-        ...[entry?.plugins || []],
-      ].filter(Boolean),
+      external: entry.output[0].format === "umd" ? [...UMD_EXTERNAL] : [...UMD_EXTERNAL, ...externals],
+      plugins: createSharedPlugins({
+        entry,
+        pkg,
+        styleInput,
+        isProduction,
+        isReact,
+        terserPlugin: isProduction ? createTerserPlugin() : undefined,
+      }),
     })),
-    {
-      input: defaultConfigs[0].input,
-      output: [{ file: "dist/types/index.d.ts", format: "es" }],
+    types && {
+      input,
+      output: [{ file: outputFiles.types, format: "es" }],
       plugins: [
         alias({
           entries: [
