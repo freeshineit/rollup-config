@@ -16,6 +16,10 @@ import { resolve as pathResolve } from "path";
 import { injectCssRequire } from "./injectCssRequire.mjs";
 import { createDefaultConfigs, formatDate, getDefaultExportName, getOutputFiles, normalizeFormats } from "./util.mjs";
 
+/**
+ * 创建 terser 插件实例
+ * @returns {import("rollup").Plugin}
+ */
 function createTerserPlugin() {
   return terser({
     compress: {
@@ -37,7 +41,7 @@ function createTerserPlugin() {
   });
 }
 
-function createSharedPlugins({ entry, pkg, cssInput, isProduction, isReact, terserPlugin }) {
+function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, terserPlugin }) {
   return [
     eslint({
       throwOnError: true, // lint 结果有错误将会抛出异常
@@ -108,20 +112,26 @@ function createSharedPlugins({ entry, pkg, cssInput, isProduction, isReact, ters
           contentBase: ["public", "dist"],
         })
       : null,
-    copy({
-      copyOnce: true,
-      flatten: false,
-      targets: [
-        { src: "src/**/*.scss", dest: "dist/style" },
-        {
-          src: "src/style.ts",
-          dest: "dist/style",
-          rename: "index.js",
-        },
-      ],
-    }),
-    // css.ts. => css.js 注入内容（require("./css.css");）
-    entry.input === cssInput ? injectCssRequire() : null,
+    // style.ts. => style.js 注入内容（require("./style.css");）
+    ...(entry.input === styleInput
+      ? [
+          copy({
+            copyOnce: true,
+            flatten: false,
+            targets: [
+              { src: "src/**/*.scss", dest: "dist/style" },
+              { src: "src/**/*.sass", dest: "dist/style" },
+              { src: "src/**/*.css", dest: "dist/style" },
+              {
+                src: "src/style.ts", // 复制 style.ts 到 dist/style/index.js，供 umd 引用
+                dest: "dist/style",
+                rename: "index.js",
+              },
+            ],
+          }),
+          injectCssRequire(),
+        ]
+      : []),
     isProduction ? terserPlugin : null,
     ...[entry?.plugins || []],
   ].filter(Boolean);
@@ -140,7 +150,7 @@ function createSharedPlugins({ entry, pkg, cssInput, isProduction, isReact, ters
  * @param {Array} configs config[]
  * @param {object=} options build options
  * @param {string=} options.input entry input
- * @param {string=} options.cssInput style input
+ * @param {string=} options.styleInput style input
  * @param {object=} options.output output files
  * @param {string=} options.output.umd umd output file
  * @param {string=} options.output.cjs cjs output file
@@ -163,7 +173,7 @@ function generateConfig(pkg, configs, options = {}) {
 */`;
 
   const input = options.input || "src/index.ts";
-  const cssInput = options.cssInput || "src/style.ts";
+  const styleInput = options.styleInput || "src/style.ts";
   const outputFiles = getOutputFiles(options.output);
   const formats = normalizeFormats(options.formats);
 
@@ -172,7 +182,7 @@ function generateConfig(pkg, configs, options = {}) {
 
   const defaultConfigs = createDefaultConfigs({
     input,
-    cssInput,
+    styleInput,
     outputFiles,
     formats,
     isReact,
@@ -186,7 +196,7 @@ function generateConfig(pkg, configs, options = {}) {
     ...defaultConfigs.map((entry) => ({
       ...entry,
       external: entry.output[0].format === "umd" ? ["react/jsx-runtime", "react", "clsx"] : ["react/jsx-runtime", "react", "clsx", ...externals],
-      plugins: createSharedPlugins({ entry, pkg, cssInput, isProduction, isReact, terserPlugin }),
+      plugins: createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, terserPlugin }),
     })),
     {
       input,
