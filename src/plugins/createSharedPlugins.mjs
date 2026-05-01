@@ -126,7 +126,7 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
               },
             ],
           }),
-          injectCssRequire(),
+          injectCssRequire({ styleOut: entry?.output?.[0]?.file }),
         ]
       : []),
     isProduction ? terserPlugin : null,
