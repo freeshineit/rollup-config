@@ -24,6 +24,6 @@ jobs:
         with:
           version: 8
       - run: pnpm install
-      - run: pnpm run lint
-      - run: pnpm run fmt
+      - run: pnpm run lint # support node 18+ only
+      - run: pnpm run fmt # support node 18+ only
       - run: pnpm run test

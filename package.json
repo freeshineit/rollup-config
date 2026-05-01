@@ -67,7 +67,7 @@
     "sass": "^1.97.1"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=14"
   },
   "publishConfig": {
     "access": "public",
