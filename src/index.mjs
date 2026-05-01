@@ -148,10 +148,12 @@ function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, te
  * @param {("tsc" | "swc")=} pkg.compiler compiler
  * @param {port=} pkg.port port
  * @param {string=} pkg.input entry input
+ * @param {string=} pkg.umdInput umd input
  * @param {string=} pkg.styleInput style input
  * @param {string=} pkg.main cjs output file (package.json main)
  * @param {string=} pkg.module esm output file (package.json module)
  * @param {string=} pkg.types dts output file (package.json types)
+ * @param {string=} pkg.umdOut umd output file
  * @param {string=} pkg.styleOut style output file
  * @param {string=} pkg.exportName umd export name
  * @param {Array} configs config[]
@@ -166,7 +168,9 @@ function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, te
  *     module: "dist/index.mjs",
  *     types: "dist/types/index.d.ts",
  *     input: "src/index.ts",
+ *     umdInput: "src/main.ts",
  *     styleInput: "src/style.ts",
+ *     umdOut: "dist/index.umd.js",
  *     styleOut: "dist/style/css.js",
  *   },
  *   [],
@@ -185,8 +189,10 @@ function generateConfig(pkg, configs) {
 */`;
 
   const input = pkg.input || "src/index.ts";
+  const umdInput = pkg.umdInput || "src/main.ts";
   const styleInput = pkg.styleInput || "src/style.ts";
   const outputFiles = getOutputFiles({
+    umd: pkg.umdOut,
     cjs: pkg.main,
     esm: pkg.module,
     types: pkg.types,
@@ -197,6 +203,7 @@ function generateConfig(pkg, configs) {
 
   const defaultConfigs = createDefaultConfigs({
     input,
+    umdInput,
     styleInput,
     outputFiles,
     isReact,
@@ -212,7 +219,7 @@ function generateConfig(pkg, configs) {
       external: entry.output[0].format === "umd" ? ["react/jsx-runtime", "react", "clsx"] : ["react/jsx-runtime", "react", "clsx", ...externals],
       plugins: createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, terserPlugin }),
     })),
-    {
+    pkg.types && {
       input,
       output: [{ file: outputFiles.types, format: "es" }],
       plugins: [

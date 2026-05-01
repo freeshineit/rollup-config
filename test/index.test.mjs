@@ -38,7 +38,7 @@ function getConfigByOutput(configs, file) {
   return configs.find((config) => config.output?.some((entry) => entry.file === file));
 }
 
-test("generateConfig creates UMD, module, style, and dts outputs when sources exist", { concurrency: false }, async () => {
+test("generateConfig creates UMD, module, and style outputs when sources exist", { concurrency: false }, async () => {
   const configs = await withGenerateConfig(
     {
       nodeEnv: "development",
@@ -56,7 +56,7 @@ test("generateConfig creates UMD, module, style, and dts outputs when sources ex
       }),
   );
 
-  assert.equal(configs.length, 5);
+  assert.equal(configs.length, 4);
 
   const umdConfig = getConfigByOutput(configs, "dist/index.umd.js");
   const cjsConfig = getConfigByOutput(configs, "dist/index.cjs");
@@ -68,7 +68,7 @@ test("generateConfig creates UMD, module, style, and dts outputs when sources ex
   assert.ok(cjsConfig);
   assert.ok(esmConfig);
   assert.ok(styleConfig);
-  assert.ok(dtsConfig);
+  assert.equal(dtsConfig, undefined);
 
   assert.deepEqual(umdConfig.external, ["react/jsx-runtime", "react", "clsx"]);
   assert.deepEqual(cjsConfig.external, ["react/jsx-runtime", "react", "clsx", "lodash"]);
@@ -83,7 +83,6 @@ test("generateConfig creates UMD, module, style, and dts outputs when sources ex
     styleConfig.plugins.some((plugin) => plugin.name === "inject-css-require"),
     true,
   );
-  assert.deepEqual(dtsConfig.external, [/\.(css|less|scss|sass)$/]);
 
   const aliasPlugin = cjsConfig.plugins.find((plugin) => plugin.name === "alias");
   assert.ok(aliasPlugin);
@@ -108,7 +107,7 @@ test("generateConfig skips UMD and style builds in production when source files 
       }),
   );
 
-  assert.equal(configs.length, 3);
+  assert.equal(configs.length, 2);
   assert.equal(getConfigByOutput(configs, "dist/index.umd.js"), undefined);
   assert.equal(getConfigByOutput(configs, "dist/style/css.js"), undefined);
 
@@ -118,7 +117,7 @@ test("generateConfig skips UMD and style builds in production when source files 
 
   assert.ok(cjsConfig);
   assert.ok(esmConfig);
-  assert.ok(dtsConfig);
+  assert.equal(dtsConfig, undefined);
   assert.equal(cjsConfig.output[0].sourcemap, false);
   assert.equal(esmConfig.output[0].sourcemap, false);
   assert.deepEqual(cjsConfig.external, ["react/jsx-runtime", "react", "clsx", "vue"]);
@@ -133,7 +132,7 @@ test("generateConfig supports custom input, output, and exportName", { concurren
     {
       nodeEnv: "development",
       reactEnv: "react",
-      existingPaths: ["src/custom-style.ts"],
+      existingPaths: ["src/custom-umd.ts", "src/custom-style.ts"],
     },
     async (generateConfig) =>
       generateConfig(
@@ -145,9 +144,12 @@ test("generateConfig supports custom input, output, and exportName", { concurren
             lodash: "^1.0.0",
           },
           main: "build/custom.cjs",
+          module: "build/custom.mjs",
           types: "build/types.d.ts",
+          umdOut: "build/custom.umd.js",
           styleOut: "build/style.cjs",
           input: "src/custom-entry.ts",
+          umdInput: "src/custom-umd.ts",
           styleInput: "src/custom-style.ts",
           exportName: "CustomGlobal",
         },
@@ -155,26 +157,28 @@ test("generateConfig supports custom input, output, and exportName", { concurren
       ),
   );
 
-  assert.equal(configs.length, 4);
+  assert.equal(configs.length, 5);
 
   const cjsConfig = getConfigByOutput(configs, "build/custom.cjs");
-  const esmConfig = getConfigByOutput(configs, "dist/index.mjs");
-  const umdConfig = getConfigByOutput(configs, "dist/index.umd.js");
+  const esmConfig = getConfigByOutput(configs, "build/custom.mjs");
+  const umdConfig = getConfigByOutput(configs, "build/custom.umd.js");
   const styleConfig = getConfigByOutput(configs, "build/style.cjs");
   const dtsConfig = getConfigByOutput(configs, "build/types.d.ts");
 
   assert.ok(cjsConfig);
   assert.equal(cjsConfig.input, "src/custom-entry.ts");
   assert.equal(cjsConfig.output[0].format, "cjs");
+
   assert.ok(esmConfig);
-  assert.equal(umdConfig, undefined); // src/main.ts does not exist
+  assert.equal(esmConfig.input, "src/custom-entry.ts");
+
+  assert.ok(umdConfig);
+  assert.equal(umdConfig.input, "src/custom-umd.ts");
+  assert.equal(umdConfig.output[0].name, "CustomGlobal");
 
   assert.ok(styleConfig);
   assert.equal(styleConfig.input, "src/custom-style.ts");
 
   assert.ok(dtsConfig);
   assert.equal(dtsConfig.input, "src/custom-entry.ts");
-
-  // umd not built, so exportName does not appear in cjs output
-  assert.equal(cjsConfig.output[0].name, undefined);
 });

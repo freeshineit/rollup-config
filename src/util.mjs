@@ -54,6 +54,7 @@ export function getOutputFiles(output) {
  * Build default rollup entries by formats and feature flags.
  * @param {object} args Build context.
  * @param {string} args.input Script entry.
+ * @param {string} args.umdInput UMD entry.
  * @param {string} args.styleInput Style entry.
  * @param {{ umd: string, cjs: string, esm: string, style: string }} args.outputFiles Output file map.
  * @param {boolean} args.isReact React mode flag.
@@ -63,6 +64,7 @@ export function getOutputFiles(output) {
  * @example
  * createDefaultConfigs({
  *   input: "src/index.ts",
+ *   umdInput: "src/main.ts",
  *   styleInput: "src/style.ts",
  *   outputFiles: { umd: "dist/index.umd.js", cjs: "dist/index.cjs", esm: "dist/index.mjs", style: "dist/style/css.js" },
  *   isReact: false,
@@ -70,13 +72,13 @@ export function getOutputFiles(output) {
  *   exportName: "Demo",
  * });
  */
-export function createDefaultConfigs({ input, styleInput, outputFiles, isReact, banner, exportName }) {
+export function createDefaultConfigs({ input, umdInput, styleInput, outputFiles, isReact, banner, exportName }) {
   const configs = [];
   const isProduction = process.env.NODE_ENV === "production";
 
-  if (fs.existsSync("src/main.ts")) {
+  if (fs.existsSync(umdInput)) {
     configs.push({
-      input,
+      input: umdInput,
       output: [
         {
           file: outputFiles.umd,
