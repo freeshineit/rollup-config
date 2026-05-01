@@ -99,7 +99,7 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
           },
         ],
       ],
-      include: ["**/*.scss", "**/*.sass", "**/*.css"],
+      include: ["/**/*.scss", "/**/*.sass", "/**/*.css"],
       includePaths: ["src/", "node_modules/"],
       // 处理从 node_modules 导入
       importer(path) {
