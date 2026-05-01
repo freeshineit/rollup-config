@@ -14,7 +14,7 @@ import { createDefaultConfigs, formatDate, getDefaultExportName, getOutputFiles 
  * @param {string=} pkg.author author name for banner
  * @param {object=} pkg.dependencies dependencies object
  * @param {("tsc" | "swc")=} pkg.compiler compiler choice, default to swc
- * @param {port=} pkg.port port for development server, default to 3000
+ * @param {port=} pkg.port port for development server; setting it enables the serve plugin
  * @param {string=} pkg.input entry input, default to src/index.ts
  * @param {string=} pkg.umdInput umd input, default to src/main.ts
  * @param {string=} pkg.styleInput style input, default to src/style.ts
