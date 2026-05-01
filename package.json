@@ -56,7 +56,6 @@
     "rollup-plugin-copy": "^3.5.0",
     "@skax/camel": "^0.2.6",
     "@swc/core": "^1.15.7",
-    "dayjs": "^1.11.13",
     "rollup": "^4.54.0",
     "rollup-plugin-dts": "^6.3.0",
     "rollup-plugin-serve": "^2.0.3",
