@@ -124,7 +124,7 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
               { src: "src/**/*.sass", dest: "dist/style" },
               { src: "src/**/*.css", dest: "dist/style" },
               {
-                src: "src/style.ts", // 复制 style.ts 到 dist/style/index.js，供 umd 引用
+                src: styleInput, // 复制 style.ts 到 dist/style/index.js，供 umd 引用
                 dest: "dist/style",
                 rename: "index.js",
               },
