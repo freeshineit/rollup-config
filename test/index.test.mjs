@@ -148,7 +148,7 @@ test("generateConfig supports custom input, output, exportName and formats", { c
         [],
         {
           input: "src/custom-entry.ts",
-          cssInput: "src/custom-style.ts",
+          styleInput: "src/custom-style.ts",
           exportName: "CustomGlobal",
           formats: ["cjs"],
           output: {

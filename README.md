@@ -141,7 +141,7 @@ export default generateConfig(pkg, [
 
 `generateConfig` 现在支持第三个参数 `options`，可以用来控制：
 
-- 自定义 `input`、`cssInput`
+- 自定义 `input`、`styleInput`
 - 自定义输出路径 `output`
 - 自定义 UMD 导出名 `exportName`
 - 自定义构建格式 `formats`（可选：`umd`、`cjs`、`esm`）
@@ -156,7 +156,7 @@ const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
 export default generateConfig(pkg, [], {
   input: "src/custom-entry.ts",
-  cssInput: "src/custom-style.ts",
+  styleInput: "src/custom-style.ts",
   exportName: "CustomGlobal",
   formats: ["cjs", "esm"],
   output: {
@@ -206,7 +206,7 @@ dist/
 
 ### 1. UMD 生成有前置条件
 
-虽然 `input`、`cssInput` 和 `output` 已支持自定义，但 UMD 是否生成仍然取决于 `src/main.ts` 是否存在。
+虽然 `input`、`styleInput` 和 `output` 已支持自定义，但 UMD 是否生成仍然取决于 `src/main.ts` 是否存在。
 
 如果你希望生成 UMD，请确保该文件存在。
 
@@ -215,7 +215,7 @@ dist/
 即便支持自定义，开箱默认仍使用以下路径：
 
 - `input: src/index.ts`
-- `cssInput: src/style.ts`
+- `styleInput: src/style.ts`
 - `output.cjs: dist/index.cjs`
 - `output.esm: dist/index.mjs`
 - `output.umd: dist/index.umd.js`

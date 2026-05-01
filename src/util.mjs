@@ -71,7 +71,7 @@ export function getOutputFiles(output) {
  * Build default rollup entries by formats and feature flags.
  * @param {object} args Build context.
  * @param {string} args.input Script entry.
- * @param {string} args.cssInput Style entry.
+ * @param {string} args.styleInput Style entry.
  * @param {{ umd: string, cjs: string, esm: string, style: string }} args.outputFiles Output file map.
  * @param {Array<"umd"|"cjs"|"esm">} args.formats Target formats.
  * @param {boolean} args.isReact React mode flag.
@@ -81,7 +81,7 @@ export function getOutputFiles(output) {
  * @example
  * createDefaultConfigs({
  *   input: "src/index.ts",
- *   cssInput: "src/style.ts",
+ *   styleInput: "src/style.ts",
  *   outputFiles: { umd: "dist/index.umd.js", cjs: "dist/index.cjs", esm: "dist/index.mjs", style: "dist/style/css.js" },
  *   formats: ["cjs", "esm"],
  *   isReact: false,
@@ -89,7 +89,7 @@ export function getOutputFiles(output) {
  *   exportName: "Demo",
  * });
  */
-export function createDefaultConfigs({ input, cssInput, outputFiles, formats, isReact, banner, exportName }) {
+export function createDefaultConfigs({ input, styleInput, outputFiles, formats, isReact, banner, exportName }) {
   const configs = [];
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -144,9 +144,9 @@ export function createDefaultConfigs({ input, cssInput, outputFiles, formats, is
     });
   }
 
-  if (fs.existsSync(cssInput)) {
+  if (fs.existsSync(styleInput)) {
     configs.push({
-      input: cssInput,
+      input: styleInput,
       output: [
         {
           file: outputFiles.style,
