@@ -14,7 +14,7 @@ import cssnano from "cssnano";
 import autoprefixer from "autoprefixer";
 import { resolve as pathResolve } from "path";
 import { injectCssRequire } from "./injectCssRequire.mjs";
-import { createDefaultConfigs, formatDate, getDefaultExportName, getOutputFiles, normalizeFormats } from "./util.mjs";
+import { createDefaultConfigs, formatDate, getDefaultExportName, getOutputFiles } from "./util.mjs";
 
 /**
  * 创建 terser 插件实例
@@ -139,7 +139,7 @@ function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, te
 
 /**
  * @description rollup config function
- * @param {object} pkg package.json
+ * @param {object} pkg package.json merged with build options
  * @param {string} pkg.name name
  * @param {string=} pkg.main main
  * @param {version=} pkg.version string
@@ -147,18 +147,14 @@ function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, te
  * @param {object=} pkg.dependencies dependencies
  * @param {("tsc" | "swc")=} pkg.compiler compiler
  * @param {port=} pkg.port port
+ * @param {string=} pkg.input entry input
+ * @param {string=} pkg.styleInput style input
+ * @param {string=} pkg.main cjs output file (package.json main)
+ * @param {string=} pkg.module esm output file (package.json module)
+ * @param {string=} pkg.types dts output file (package.json types)
+ * @param {string=} pkg.styleOut style output file
+ * @param {string=} pkg.exportName umd export name
  * @param {Array} configs config[]
- * @param {object=} options build options
- * @param {string=} options.input entry input
- * @param {string=} options.styleInput style input
- * @param {object=} options.output output files
- * @param {string=} options.output.umd umd output file
- * @param {string=} options.output.cjs cjs output file
- * @param {string=} options.output.esm esm output file
- * @param {string=} options.output.style style output file
- * @param {string=} options.output.types dts output file
- * @param {string=} options.exportName umd export name
- * @param {Array<"umd"|"cjs"|"esm">=} options.formats build formats
  * @example
  * generateConfig(
  *   {
@@ -166,23 +162,18 @@ function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, te
  *     version: "1.0.0",
  *     author: "your-name",
  *     dependencies: { clsx: "^2.1.1" },
- *   },
- *   [],
- *   {
+ *     main: "dist/index.cjs",
+ *     module: "dist/index.mjs",
+ *     types: "dist/types/index.d.ts",
  *     input: "src/index.ts",
  *     styleInput: "src/style.ts",
- *     formats: ["cjs", "esm"],
- *     output: {
- *       cjs: "dist/index.cjs",
- *       esm: "dist/index.mjs",
- *       style: "dist/style/css.js",
- *       types: "dist/types/index.d.ts",
- *     },
+ *     styleOut: "dist/style/css.js",
  *   },
+ *   [],
  * );
  * @returns
  */
-function generateConfig(pkg, configs, options = {}) {
+function generateConfig(pkg, configs) {
   const isProduction = process.env.NODE_ENV === "production";
   const isReact = process.env.REACT_ENV === "react";
 
@@ -193,19 +184,21 @@ function generateConfig(pkg, configs, options = {}) {
 * Released under the MIT License.
 */`;
 
-  const input = options.input || "src/index.ts";
-  const styleInput = options.styleInput || "src/style.ts";
-  const outputFiles = getOutputFiles(options.output);
-  const formats = normalizeFormats(options.formats);
-
+  const input = pkg.input || "src/index.ts";
+  const styleInput = pkg.styleInput || "src/style.ts";
+  const outputFiles = getOutputFiles({
+    cjs: pkg.main,
+    esm: pkg.module,
+    types: pkg.types,
+    style: pkg.styleOut,
+  });
   const externals = Object.keys(pkg?.dependencies || {});
-  const exportName = options.exportName || getDefaultExportName(pkg?.name);
+  const exportName = pkg.exportName || getDefaultExportName(pkg?.name);
 
   const defaultConfigs = createDefaultConfigs({
     input,
     styleInput,
     outputFiles,
-    formats,
     isReact,
     banner,
     exportName,

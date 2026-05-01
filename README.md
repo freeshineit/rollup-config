@@ -38,6 +38,8 @@ const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 export default generateConfig(pkg);
 ```
 
+`generateConfig` 直接读取 `package.json` 对象，无需额外的 `options` 参数。输出路径由 `pkg.main`、`pkg.module`、`pkg.types` 驱动，与 `package.json` 标准字段保持一致。
+
 然后在 `package.json` 中添加构建脚本：
 
 ```json
@@ -96,22 +98,32 @@ src/
 
 调用 `generateConfig(pkg)` 时，会读取以下字段：
 
-| 字段           | 类型             | 说明                            |
-| -------------- | ---------------- | ------------------------------- |
-| `name`         | `string`         | 用于 banner 和 UMD 导出名       |
-| `version`      | `string`         | 用于 banner 和版本替换          |
-| `author`       | `string`         | 用于 banner                     |
-| `dependencies` | `object`         | 自动转为 external               |
-| `compiler`     | `"tsc" \| "swc"` | 指定编译器                      |
-| `port`         | `number`         | 开发态 UMD 场景下用于本地 serve |
+| 字段           | 类型             | 说明                                       |
+| -------------- | ---------------- | ------------------------------------------ |
+| `name`         | `string`         | 用于 banner 和 UMD 导出名                  |
+| `version`      | `string`         | 用于 banner 和版本替换                     |
+| `author`       | `string`         | 用于 banner                                |
+| `main`         | `string`         | CJS 输出路径，默认 `dist/index.cjs`        |
+| `module`       | `string`         | ESM 输出路径，默认 `dist/index.mjs`        |
+| `types`        | `string`         | DTS 输出路径，默认 `dist/types/index.d.ts` |
+| `dependencies` | `object`         | 自动转为 external                          |
+| `compiler`     | `"tsc" \| "swc"` | 指定编译器，默认 `swc`                     |
+| `port`         | `number`         | 开发态 UMD 场景下用于本地 serve            |
+| `input`        | `string`         | 脚本入口，默认 `src/index.ts`              |
+| `styleInput`   | `string`         | 样式入口，默认 `src/style.ts`              |
+| `styleOut`     | `string`         | 样式产物路径，默认 `dist/style/css.js`     |
+| `exportName`   | `string`         | UMD 全局导出名，默认由 `name` 推导         |
 
-示例：
+示例 `package.json`：
 
 ```json
 {
   "name": "@scope/button",
   "version": "1.0.0",
   "author": "your-name",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/types/index.d.ts",
   "compiler": "swc",
   "port": 3000
 }
@@ -139,14 +151,7 @@ export default generateConfig(pkg, [
 
 ## 自定义构建入口与产物
 
-`generateConfig` 现在支持第三个参数 `options`，可以用来控制：
-
-- 自定义 `input`、`styleInput`
-- 自定义输出路径 `output`
-- 自定义 UMD 导出名 `exportName`
-- 自定义构建格式 `formats`（可选：`umd`、`cjs`、`esm`）
-
-示例：
+将自定义字段直接写入传入的 `pkg` 对象即可：
 
 ```js
 import generateConfig from "@skax/rollup-config";
@@ -154,18 +159,20 @@ import fs from "fs";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
-export default generateConfig(pkg, [], {
-  input: "src/custom-entry.ts",
-  styleInput: "src/custom-style.ts",
-  exportName: "CustomGlobal",
-  formats: ["cjs", "esm"],
-  output: {
-    cjs: "build/index.cjs",
-    esm: "build/index.mjs",
-    style: "build/style.cjs",
+export default generateConfig(
+  {
+    ...pkg,
+    input: "src/custom-entry.ts",
+    styleInput: "src/custom-style.ts",
+    styleOut: "build/style.cjs",
+    exportName: "CustomGlobal",
+    // main/module/types 优先从 package.json 读取，也可在此覆盖
+    main: "build/index.cjs",
+    module: "build/index.mjs",
     types: "build/index.d.ts",
   },
-});
+  [],
+);
 ```
 
 ## 环境变量
@@ -216,11 +223,12 @@ dist/
 
 - `input: src/index.ts`
 - `styleInput: src/style.ts`
-- `output.cjs: dist/index.cjs`
-- `output.esm: dist/index.mjs`
-- `output.umd: dist/index.umd.js`
-- `output.style: dist/style/css.js`
-- `output.types: dist/types/index.d.ts`
+- `main（cjs）: dist/index.cjs`
+- `module（esm）: dist/index.mjs`
+- `types（dts）: dist/types/index.d.ts`
+- `styleOut: dist/style/css.js`
+
+* `umd（仅 src/main.ts 存在时）: dist/index.umd.js`
 
 如果项目需要完全不同的构建策略，依然建议在外层组合或扩展配置。
 

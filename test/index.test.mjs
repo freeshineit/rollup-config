@@ -128,7 +128,7 @@ test("generateConfig skips UMD and style builds in production when source files 
   );
 });
 
-test("generateConfig supports custom input, output, exportName and formats", { concurrency: false }, async () => {
+test("generateConfig supports custom input, output, and exportName", { concurrency: false }, async () => {
   const configs = await withGenerateConfig(
     {
       nodeEnv: "development",
@@ -144,23 +144,18 @@ test("generateConfig supports custom input, output, exportName and formats", { c
           dependencies: {
             lodash: "^1.0.0",
           },
-        },
-        [],
-        {
+          main: "build/custom.cjs",
+          types: "build/types.d.ts",
+          styleOut: "build/style.cjs",
           input: "src/custom-entry.ts",
           styleInput: "src/custom-style.ts",
           exportName: "CustomGlobal",
-          formats: ["cjs"],
-          output: {
-            cjs: "build/custom.cjs",
-            types: "build/types.d.ts",
-            style: "build/style.cjs",
-          },
         },
+        [],
       ),
   );
 
-  assert.equal(configs.length, 3);
+  assert.equal(configs.length, 4);
 
   const cjsConfig = getConfigByOutput(configs, "build/custom.cjs");
   const esmConfig = getConfigByOutput(configs, "dist/index.mjs");
@@ -171,8 +166,8 @@ test("generateConfig supports custom input, output, exportName and formats", { c
   assert.ok(cjsConfig);
   assert.equal(cjsConfig.input, "src/custom-entry.ts");
   assert.equal(cjsConfig.output[0].format, "cjs");
-  assert.equal(esmConfig, undefined);
-  assert.equal(umdConfig, undefined);
+  assert.ok(esmConfig);
+  assert.equal(umdConfig, undefined); // src/main.ts does not exist
 
   assert.ok(styleConfig);
   assert.equal(styleConfig.input, "src/custom-style.ts");
@@ -180,6 +175,6 @@ test("generateConfig supports custom input, output, exportName and formats", { c
   assert.ok(dtsConfig);
   assert.equal(dtsConfig.input, "src/custom-entry.ts");
 
-  // formats excludes umd, so custom exportName should not leak into non-umd outputs.
+  // umd not built, so exportName does not appear in cjs output
   assert.equal(cjsConfig.output[0].name, undefined);
 });
