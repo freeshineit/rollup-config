@@ -11,7 +11,7 @@ import postcss from "rollup-plugin-postcss";
 import cssnano from "cssnano";
 import autoprefixer from "autoprefixer";
 import { resolve as pathResolve } from "path";
-import { injectCssRequire } from "../injectCssRequire.mjs";
+import { injectCssRequire } from "./injectCssRequire.mjs";
 
 /**
  * 创建默认共享插件链。
