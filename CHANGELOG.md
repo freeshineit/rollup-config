@@ -1,4 +1,10 @@
-## v1.0.0-beta.1(2026-05-01)
+## v1.0.1(2026-05-02)
+
+### Fixed
+
+- Fixed style include path seting
+
+## v1.0.0(2026-05-01)
 
 ### Feat
 
