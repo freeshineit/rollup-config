@@ -1,5 +1,6 @@
 import { upperCamel } from "@skax/camel";
 import fs from "fs";
+import path from "path";
 
 /**
  * Format a date value to YYYY-MM-DD in UTC.
@@ -148,4 +149,41 @@ export function createDefaultConfigs({ input, umdInput, styleInput, outputFiles,
   }
 
   return configs;
+}
+
+const ESLINT_CONFIG_FILES = ["eslint.config.mjs"];
+
+/**
+ * 从给定目录向上查找 pnpm workspace 根目录（含 pnpm-workspace.yaml 的目录）。
+ * @param {string} dir 起始目录
+ * @returns {string | null} workspace 根目录路径，未找到返回 null
+ */
+function findPnpmWorkspaceRoot(dir) {
+  let current = dir;
+  while (true) {
+    if (fs.existsSync(path.join(current, "pnpm-workspace.yaml"))) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+}
+
+export function hasEslintConfig() {
+  const cwd = process.cwd();
+  const dirsToCheck = [cwd];
+
+  const workspaceRoot = findPnpmWorkspaceRoot(cwd);
+  if (workspaceRoot && workspaceRoot !== cwd) {
+    dirsToCheck.push(workspaceRoot);
+  }
+
+  const found = dirsToCheck.some((dir) => ESLINT_CONFIG_FILES.some((file) => fs.existsSync(path.resolve(dir, file))));
+
+  if (!found) {
+    console.warn(`ESLint configuration file not found (${ESLINT_CONFIG_FILES.join(", ")}), skip rollup esLint plugin.`);
+  }
+
+  return found;
 }
