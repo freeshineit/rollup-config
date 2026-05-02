@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 const moduleUrl = pathToFileURL(new URL("../src/index.mjs", import.meta.url).pathname).href;
@@ -22,7 +23,8 @@ async function withGenerateConfig({ nodeEnv, reactEnv, existingPaths }, run) {
 
   process.env.NODE_ENV = nodeEnv;
   process.env.REACT_ENV = reactEnv;
-  fs.existsSync = (filePath) => existingPaths.includes(filePath);
+  const resolvedPaths = existingPaths.map((p) => path.resolve(p));
+  fs.existsSync = (filePath) => resolvedPaths.includes(path.resolve(filePath));
 
   // 使用 Date.now() 生成 cache buster，避免随机数导致的不可预测行为
   const cacheBuster = Date.now();
@@ -62,7 +64,7 @@ test("generateConfig creates UMD, module, and style outputs when sources exist",
     {
       nodeEnv: "development",
       reactEnv: "react",
-      existingPaths: ["src/main.ts", "src/style.ts"],
+      existingPaths: ["src/main.ts", "src/style.ts", "eslint.config.mjs"],
     },
     async (generateConfig) =>
       generateConfig({
@@ -151,7 +153,7 @@ test("generateConfig supports custom input, output, and exportName", { concurren
     {
       nodeEnv: "development",
       reactEnv: "react",
-      existingPaths: ["src/custom-umd.ts", "src/custom-style.ts"],
+      existingPaths: ["src/custom-umd.ts", "src/custom-style.ts", "eslint.config.mjs"],
     },
     async (generateConfig) =>
       generateConfig(

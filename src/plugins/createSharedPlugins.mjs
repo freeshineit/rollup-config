@@ -12,6 +12,7 @@ import cssnano from "cssnano";
 import autoprefixer from "autoprefixer";
 import { resolve as pathResolve } from "path";
 import { injectCssRequire } from "./injectCssRequire.mjs";
+import { hasEslintConfig } from "../util.mjs";
 
 /**
  * 创建默认共享插件链。
@@ -39,8 +40,8 @@ import { injectCssRequire } from "./injectCssRequire.mjs";
  */
 export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isReact, terserPlugin }) {
   return [
-    // 生产构建跳过 ESLint 以提升构建速度
-    ...(!isProduction
+    // 生产构建跳过 ESLint 以提升构建速度，且仅在存在 eslint 配置文件时启用
+    ...(!isProduction && hasEslintConfig()
       ? [
           eslint({
             throwOnError: true,
