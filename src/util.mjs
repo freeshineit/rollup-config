@@ -152,6 +152,7 @@ export function createDefaultConfigs({ input, umdInput, styleInput, outputFiles,
 }
 
 const ESLINT_CONFIG_FILES = ["eslint.config.mjs"];
+const PRETTIER_CONFIG_FILES = ["prettier.config.mjs"];
 
 /**
  * 从给定目录向上查找 pnpm workspace 根目录（含 pnpm-workspace.yaml 的目录）。
@@ -179,11 +180,17 @@ export function hasEslintConfig() {
     dirsToCheck.push(workspaceRoot);
   }
 
-  const found = dirsToCheck.some((dir) => ESLINT_CONFIG_FILES.some((file) => fs.existsSync(path.resolve(dir, file))));
+  const foundESlint = dirsToCheck.some((dir) => ESLINT_CONFIG_FILES.some((file) => fs.existsSync(path.resolve(dir, file))));
+  const foundPrettier = dirsToCheck.some((dir) => PRETTIER_CONFIG_FILES.some((file) => fs.existsSync(path.resolve(dir, file))));
 
-  if (!found) {
+  if (!foundESlint) {
     console.warn(`ESLint configuration file not found (${ESLINT_CONFIG_FILES.join(", ")}), skip rollup esLint plugin.`);
+    return false;
+  }
+  if (!foundPrettier) {
+    console.warn(`Prettier configuration file not found (${PRETTIER_CONFIG_FILES.join(", ")}), skip rollup esLint plugin.`);
+    return false;
   }
 
-  return found;
+  return true;
 }
