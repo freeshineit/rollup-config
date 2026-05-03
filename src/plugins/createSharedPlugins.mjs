@@ -124,6 +124,7 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
     !isProduction && entry.output[0].format === "umd" && pkg.port
       ? serve({
           port: pkg.port,
+          open: true,
           contentBase: ["public", "dist"],
         })
       : null,
