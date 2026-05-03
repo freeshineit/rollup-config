@@ -46,7 +46,20 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
           eslint({
             throwOnError: true,
             include: ["src/**/*.ts", "src/**/*.js", "src/**/*.cjs", "src/**/*.mjs", "src/**/*.jsx", "src/**/*.tsx"],
-            exclude: ["node_modules/**", "**/__tests__/**"],
+            exclude: [
+              "node_modules/**",
+              "**/__tests__/**",
+              "**/e2e/**",
+              "**/*.test.{ts,js,cjs,mjs,tsx,jsx}",
+              "**/*.spec.{ts,js,cjs,mjs,tsx,jsx}",
+              "**/*.min.js",
+              "**/*.umd.js",
+              "**/dist/**",
+              "**/build/**",
+              "**/coverage/**",
+              "**/docs/**",
+              "**/examples/**",
+            ],
           }),
         ]
       : []),
@@ -81,6 +94,7 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
     replace({
       __VERSION__: `${pkg.version}`,
       preventAssignment: true,
+      "process.env.NODE_ENV": !isProduction ? '"development"' : '"production"',
     }),
     postcss({
       plugins: [autoprefixer(), cssnano({ preset: "default" })],
@@ -110,6 +124,7 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
     !isProduction && entry.output[0].format === "umd" && pkg.port
       ? serve({
           port: pkg.port,
+          open: true,
           contentBase: ["public", "dist"],
         })
       : null,
