@@ -111,15 +111,15 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
           "sass",
           {
             silenceDeprecations: ["legacy-js-api"],
+            includePaths: ["node_modules", "src"],
+            importer(path) {
+              // 处理以 ~ 开头的路径，表示从 node_modules 中导入
+              return { file: path[0] === "~" ? path.substr(1) : path };
+            },
           },
         ],
       ],
-      include: ["/**/*.scss", "/**/*.sass", "/**/*.css"],
-      includePaths: ["src/", "node_modules/"],
-      // 处理从 node_modules 导入
-      importer(path) {
-        return { file: path[0] === "~" ? path.slice(1) : path };
-      },
+      extensions: [".scss", ".css", ".sass"],
     }),
     !isProduction && entry.output[0].format === "umd" && pkg.port
       ? serve({
