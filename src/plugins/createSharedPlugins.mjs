@@ -6,6 +6,7 @@ import eslint from "@rollup/plugin-eslint";
 import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
 import alias from "@rollup/plugin-alias";
+import strip from "@rollup/plugin-strip";
 import copy from "rollup-plugin-copy";
 import postcss from "rollup-plugin-postcss";
 import cssnano from "cssnano";
@@ -150,6 +151,13 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
         ]
       : []),
     isProduction ? terserPlugin : null,
+    isProduction
+      ? strip({
+          include: ["src/**/*.{ts,js,cjs,mjs,tsx,jsx}"],
+          debugger: true,
+          exclude: ["**/node_modules/@skax/logger/**"], // 保留 logger 模块中的 console 方法
+        })
+      : null,
     ...[entry?.plugins || []],
   ].filter(Boolean);
 }
