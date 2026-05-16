@@ -1,6 +1,6 @@
 {
   "name": "@skax/rollup-config",
-  "version": "1.0.6-beta.2",
+  "version": "1.0.6-beta.3",
   "main": "./src/index.mjs",
   "types": "./src/index.mjs",
   "module": "./src/index.mjs",
@@ -34,7 +34,6 @@
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "@rollup/plugin-strip": "^3.0.4",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.4",
     "eslint-config-xx": "^2.2.4",
@@ -54,6 +53,7 @@
     "@rollup/plugin-swc": "^0.4.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.3.0",
+    "@rollup/plugin-strip": "^3.0.4",
     "@skax/camel": "^0.2.6",
     "@swc/core": "^1.15.33",
     "autoprefixer": "^10.5.0",
