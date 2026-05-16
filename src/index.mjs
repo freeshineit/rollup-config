@@ -27,6 +27,7 @@ const UMD_EXTERNAL = Object.freeze(["react/jsx-runtime", "react", "clsx"]);
  * @param {string=} pkg.umdOut umd output file, default to dist/index.umd.js
  * @param {string=} pkg.styleOut style output file, default to dist/css.js, e.g. dist/style/css.js, must not be index.js to avoid overwriting the main entry
  * @param {string=} pkg.exportName umd export name when format is umd, default to PascalCase of package name
+ * @param {boolean=} pkg.dropConsole whether to terser drop console in production, default to true
  * @param {Array=} configs config[]
  * @example
  * generateConfig(
@@ -92,7 +93,7 @@ function generateConfig(pkg, configs = []) {
         styleInput,
         isProduction,
         isReact,
-        terserPlugin: isProduction ? createTerserPlugin() : undefined,
+        terserPlugin: isProduction ? createTerserPlugin(pkg) : undefined,
       }),
     })),
     types && {
