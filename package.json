@@ -1,6 +1,6 @@
 {
   "name": "@skax/rollup-config",
-  "version": "1.0.5-beta.2",
+  "version": "1.0.5",
   "main": "./src/index.mjs",
   "types": "./src/index.mjs",
   "module": "./src/index.mjs",
