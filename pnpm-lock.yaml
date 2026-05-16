@@ -95,8 +95,8 @@ devDependencies:
     specifier: ^9.39.4
     version: 9.39.4
   eslint-config-xx:
-    specifier: ^2.2.4
-    version: 2.2.4
+    specifier: ^2.2.5
+    version: 2.2.5
   husky:
     specifier: ^9.1.7
     version: 9.1.7
@@ -3632,8 +3632,8 @@ packages:
       eslint: 9.39.4
     dev: true
 
-  /eslint-config-xx@2.2.4:
-    resolution: {integrity: sha512-apP9+5VNRV0Qoj+IdIrs7rgqLw48j2B8+AJzEsGrg4uayMIOokzcjcB+0XMDBxPiiRwq4yCAcQH5RNfVFzmo8Q==}
+  /eslint-config-xx@2.2.5:
+    resolution: {integrity: sha512-YhKhCZYorGa+Cd4aKT74/xI2bCBkvl6RPWmLRoIex8VkCwKlMOdyPRzZnr/F7RIJDNJyvjXoIyrIvmg2H57f3w==}
     engines: {node: '>=18'}
     dependencies:
       '@eslint/js': 9.39.4
