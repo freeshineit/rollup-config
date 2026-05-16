@@ -1,6 +1,6 @@
 {
   "name": "@skax/rollup-config",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "./src/index.mjs",
   "types": "./src/index.mjs",
   "module": "./src/index.mjs",
@@ -82,5 +82,5 @@
   "bugs": {
     "url": "https://github.com/freeshineit/rollup-config/issues"
   },
-  "homepage": "https://freeshineit.github.io/rollup-config/"
+  "homepage": "https://github.com/freeshineit/rollup-config"
 }
