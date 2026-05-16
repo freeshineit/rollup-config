@@ -29,6 +29,9 @@ dependencies:
   '@rollup/plugin-replace':
     specifier: ^6.0.3
     version: 6.0.3(rollup@4.60.2)
+  '@rollup/plugin-strip':
+    specifier: ^3.0.4
+    version: 3.0.4(rollup@4.60.2)
   '@rollup/plugin-swc':
     specifier: ^0.4.0
     version: 0.4.0(@swc/core@1.15.33)(rollup@4.60.2)
@@ -92,8 +95,8 @@ devDependencies:
     specifier: ^9.39.4
     version: 9.39.4
   eslint-config-xx:
-    specifier: ^2.2.4
-    version: 2.2.4
+    specifier: ^2.2.5
+    version: 2.2.5
   husky:
     specifier: ^9.1.7
     version: 9.1.7
@@ -1787,6 +1790,21 @@ packages:
         optional: true
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.60.2)
+      magic-string: 0.30.21
+      rollup: 4.60.2
+    dev: false
+
+  /@rollup/plugin-strip@3.0.4(rollup@4.60.2):
+    resolution: {integrity: sha512-LDRV49ZaavxUo2YoKKMQjCxzCxugu1rCPQa0lDYBOWLj6vtzBMr8DcoJjsmg+s450RbKbe3qI9ZLaSO+O1oNbg==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@rollup/pluginutils': 5.3.0(rollup@4.60.2)
+      estree-walker: 2.0.2
       magic-string: 0.30.21
       rollup: 4.60.2
     dev: false
@@ -3614,8 +3632,8 @@ packages:
       eslint: 9.39.4
     dev: true
 
-  /eslint-config-xx@2.2.4:
-    resolution: {integrity: sha512-apP9+5VNRV0Qoj+IdIrs7rgqLw48j2B8+AJzEsGrg4uayMIOokzcjcB+0XMDBxPiiRwq4yCAcQH5RNfVFzmo8Q==}
+  /eslint-config-xx@2.2.5:
+    resolution: {integrity: sha512-YhKhCZYorGa+Cd4aKT74/xI2bCBkvl6RPWmLRoIex8VkCwKlMOdyPRzZnr/F7RIJDNJyvjXoIyrIvmg2H57f3w==}
     engines: {node: '>=18'}
     dependencies:
       '@eslint/js': 9.39.4
