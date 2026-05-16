@@ -71,6 +71,9 @@ dependencies:
   sass:
     specifier: ^1.99.0
     version: 1.99.0
+  terser:
+    specifier: ^5.47.1
+    version: 5.47.1
   typescript:
     specifier: ^5.9.3
     version: 5.9.3
@@ -1816,7 +1819,7 @@ packages:
       rollup: 4.60.2
       serialize-javascript: 6.0.2
       smob: 1.6.1
-      terser: 5.46.2
+      terser: 5.47.1
     dev: false
 
   /@rollup/plugin-typescript@12.3.0(rollup@4.60.2)(typescript@5.9.3):
@@ -6486,8 +6489,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /terser@5.46.2:
-    resolution: {integrity: sha512-uxfo9fPcSgLDYob/w1FuL0c99MWiJDnv+5qXSQc5+Ki5NjVNsYi66INnMFBjf6uFz6OnX12piJQPF4IpjJTNTw==}
+  /terser@5.47.1:
+    resolution: {integrity: sha512-tPbLXTI6ohPASb/1YViL428oEHu6/qv1OxqYnfaonVCFHqx4+wCd95pHrQWsL5X4pl90CTyW9piSAsS2L0VoMw==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
