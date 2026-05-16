@@ -1,6 +1,6 @@
 {
   "name": "@skax/rollup-config",
-  "version": "1.0.5-beta.1",
+  "version": "1.0.5-beta.2",
   "main": "./src/index.mjs",
   "types": "./src/index.mjs",
   "module": "./src/index.mjs",
@@ -52,7 +52,7 @@
     "@rollup/plugin-swc": "^0.4.0",
     "@rollup/plugin-typescript": "^12.3.0",
     "@rollup/plugin-alias": "^6.0.0",
-    "@rollup/plugin-terser": "^1.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
     "rollup-plugin-copy": "^3.5.0",
     "@skax/camel": "^0.2.6",
     "@swc/core": "^1.15.33",
@@ -64,7 +64,8 @@
     "autoprefixer": "^10.5.0",
     "cssnano": "^7.1.8",
     "postcss": "^8.5.13",
-    "sass": "^1.99.0"
+    "sass": "^1.99.0",
+    "terser": "^5.47.1"
   },
   "engines": {
     "node": ">=16"
