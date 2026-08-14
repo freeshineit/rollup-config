@@ -16,8 +16,8 @@
     "test": "node --test",
     "lint": "eslint --fix \"./src/**/*.{ts,tsx,js,jsx,mjs,vue,cjs}\"",
     "lint:check": "eslint \"./src/**/*.{ts,tsx,js,jsx,mjs,vue,cjs}\"",
-    "fmt": "prettier --write \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs,css,scss,sass}\"",
-    "fmt:check": "prettier --check \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,yaml,vue,cjs,css,scss,sass}\"",
+    "fmt": "prettier --write \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,vue,cjs,css,scss,sass}\"",
+    "fmt:check": "prettier --check \"./**/*.{ts,tsx,js,jsx,mjs,json,md,yml,vue,cjs,css,scss,sass}\"",
     "prepare": "husky"
   },
   "keywords": [
