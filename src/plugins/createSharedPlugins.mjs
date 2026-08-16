@@ -155,7 +155,7 @@ export function createSharedPlugins({ entry, pkg, styleInput, isProduction, isRe
       ? strip({
           include: ["src/**/*.{ts,js,cjs,mjs,tsx,jsx}"],
           debugger: true,
-          exclude: ["**/node_modules/@skax/logger/**", "**/node_modules/@ezuikit/utils-logger/**"], // 保留 logger 模块中的 console 方法
+          exclude: ["**/node_modules/@skax/logger/**", "**/node_modules/@ezuikit/utils-logger/**", "logger.ts"], // 保留 logger 模块中的 console 方法
         })
       : null,
     ...[entry?.plugins || []],
