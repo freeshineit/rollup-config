@@ -6,6 +6,8 @@
 
 ## 安装
 
+> 说明：当前项目推荐在 Node >= 22 环境下使用。较低版本的 Node 可能存在兼容性问题。
+
 ```bash
 # npm
 npm install rollup @skax/rollup-config -D
