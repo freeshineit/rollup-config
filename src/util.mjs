@@ -3,30 +3,49 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Format a date value to YYYY-MM-DD in UTC.
+ * Format a date value to local date time in YYYY-MM-DD HH:mm:ss.
  * @param {Date | string | number} [date=new Date()] Date instance or parsable date input.
+ * @param {boolean | { withTime?: boolean }} [withTime=true] Whether to include time portion.
  * @returns {string}
  * @example
  * formatDate(new Date("2026-04-30T00:00:00Z"));
+ * // => "2026-04-30 08:00:00" (depends on local timezone)
+ * formatDate(new Date("2026-04-30T00:00:00Z"), false);
  * // => "2026-04-30"
  */
-export function formatDate(date = new Date()) {
+export function formatDate(date = new Date(), withTime = true) {
+  const includeTime = typeof withTime === "object" ? withTime.withTime !== false : withTime !== false;
   const parsedDate = date instanceof Date ? date : new Date(date);
 
-  // Handle invalid date
   if (Number.isNaN(parsedDate.getTime())) {
     const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(now.getUTCDate()).padStart(2, "0");
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    if (!includeTime) {
+      return `${year}-${month}-${day}`;
+    }
+
+    const hour = String(now.getHours()).padStart(2, "0");
+    const minute = String(now.getMinutes()).padStart(2, "0");
+    const second = String(now.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+  }
+
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getDate()).padStart(2, "0");
+
+  if (!includeTime) {
     return `${year}-${month}-${day}`;
   }
 
-  const year = parsedDate.getUTCFullYear();
-  const month = String(parsedDate.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(parsedDate.getUTCDate()).padStart(2, "0");
+  const hour = String(parsedDate.getHours()).padStart(2, "0");
+  const minute = String(parsedDate.getMinutes()).padStart(2, "0");
+  const second = String(parsedDate.getSeconds()).padStart(2, "0");
 
-  return `${year}-${month}-${day}`;
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
 }
 
 /**

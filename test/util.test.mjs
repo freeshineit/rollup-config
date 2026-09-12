@@ -22,33 +22,52 @@ function withExistsSync(existingPaths, run) {
 const BANNER = "/* demo */";
 
 describe("formatDate", () => {
-  test("returns YYYY-MM-DD in UTC for the current time by default", () => {
+  test("returns local datetime with seconds by default", () => {
+    const now = new Date();
     const result = formatDate();
-    assert.match(result, /^\d{4}-\d{2}-\d{2}$/);
-    assert.equal(result, formatDate(new Date()));
+    assert.match(result, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hour = String(now.getHours()).padStart(2, "0");
+    const minute = String(now.getMinutes()).padStart(2, "0");
+    const second = String(now.getSeconds()).padStart(2, "0");
+
+    assert.equal(result, `${year}-${month}-${day} ${hour}:${minute}:${second}`);
   });
 
-  test("formats a Date instance", () => {
-    assert.equal(formatDate(new Date("2026-04-30T00:00:00Z")), "2026-04-30");
+  test("formats a Date instance in local time", () => {
+    const date = new Date("2026-04-30T00:00:00Z");
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+    const second = String(date.getSeconds()).padStart(2, "0");
+
+    assert.equal(formatDate(date), `${year}-${month}-${day} ${hour}:${minute}:${second}`);
   });
 
-  test("formats an ISO string", () => {
-    assert.equal(formatDate("2026-04-30T00:00:00Z"), "2026-04-30");
+  test("formats an ISO string in local time", () => {
+    const date = new Date("2026-04-30T00:00:00Z");
+    assert.equal(formatDate("2026-04-30T00:00:00Z"), formatDate(date));
   });
 
-  test("formats a numeric timestamp", () => {
-    assert.equal(formatDate(Date.UTC(2026, 3, 30)), "2026-04-30");
+  test("supports date-only output when requested", () => {
+    const date = new Date("2026-04-30T12:34:56");
+    assert.equal(formatDate(date, false), "2026-04-30");
+    assert.equal(formatDate(date, { withTime: false }), "2026-04-30");
   });
 
-  test("uses UTC date regardless of local timezone", () => {
-    // 2026-05-01T00:30:00+08:00 在 UTC 下仍是 2026-04-30
-    // 无论测试机位于哪个时区，都应输出 UTC 日期
-    assert.equal(formatDate("2026-05-01T00:30:00+08:00"), "2026-04-30");
+  test("supports numeric timestamps in local time", () => {
+    const date = new Date(Date.UTC(2026, 3, 30));
+    assert.equal(formatDate(Date.UTC(2026, 3, 30)), formatDate(date));
   });
 
-  test("falls back to the current UTC date for invalid input", () => {
+  test("falls back to the current local datetime for invalid input", () => {
     const result = formatDate("not-a-valid-date");
-    assert.match(result, /^\d{4}-\d{2}-\d{2}$/);
+    assert.match(result, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
     assert.equal(result, formatDate(new Date()));
   });
 });
