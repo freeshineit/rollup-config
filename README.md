@@ -7,9 +7,12 @@
 ## 安装
 
 ```bash
+
+## node >= 20
 # npm
 npm install rollup @skax/rollup-config -D
 
+## node >= 20
 # yarn
 yarn add rollup @skax/rollup-config -D
 
